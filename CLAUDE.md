@@ -25,6 +25,7 @@ npm run lint           # eslint --fix ;  lint:check — no fix (CI)
 npm run typecheck      # nuxt typecheck (app, server, tests, configs)
 npm run test           # vitest watch ;  test:run — once ;  test:coverage — node project + coverage
 npm run test:smoke     # playwright smoke spec ;  test:e2e — all specs (both need `npm run build` first)
+npm run screenshot     # regenerate docs/readme/sport-filter.png (needs a build; not part of CI)
 ```
 
 Playwright runs the existing production build against the fixture server on ports 3920/3921.
@@ -101,7 +102,9 @@ hydration warnings). Never weaken a rule, threshold or test to make a check pass
 - Work happens on `dev`, one commit per plan phase after the owner reviews it. `main` is what
   Vercel deploys and is protected by a ruleset (PR required, linear history, required check
   "Lint, Typecheck, Test, Build"): code reaches it through a `dev` → `main` PR that the owner
-  merges (rebase). Push `dev` and open that PR only when the owner asks.
+  merges (rebase). Push `dev` and open that PR only when the owner asks. After the merge, `dev` is
+  reset to `origin/main` and pushed with `--force-with-lease` (the rebase merge rewrote the commit),
+  so both branches stay identical and the history linear.
 
 ## Skills
 

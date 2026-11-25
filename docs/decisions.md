@@ -221,8 +221,9 @@ server in tests and `dev:fixtures`).
   protected by a ruleset: no deletion or force-push, linear history, PR required (0 approvals,
   rebase or squash merge), required check "Lint, Typecheck, Test, Build" (`E2E` runs, not yet
   required). From Phase 6 on, work happens on `dev`, one commit per phase after the owner's
-  review, and reaches `main` through a `dev` → `main` PR that the owner rebase-merges. History is
-  never rewritten after a push.
+  review, and reaches `main` through a `dev` → `main` PR that the owner rebase-merges; then `dev`
+  is reset to `origin/main` (force-with-lease on `dev` only), so the two stay identical. `main`'s
+  history is never rewritten.
 - **Vercel:** Git integration, Nuxt auto-detects the preset, no `vercel.json`. After each deploy,
   warm the cache for every league before sharing the link.
 - **Not used:** dependabot (it would open PRs while the repo is being reviewed), extra Playwright
