@@ -1,0 +1,15 @@
+{
+  "leagues": [
+    {
+      "idLeague": "4336",
+      "strLeague": "Greek Super League 1",
+      "strSport": "Soccer",
+      "strCountry": "Greece",
+      "intFormedYear": "1927",
+      "strCurrentSeason": "2026-2027",
+      "strWebsite": "www.slgr.gr/el",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badge/sni7f51782459204.png",
+      "strDescriptionEN": "The Super League 1 (Greek: Σούπερ Λιγκ 1), also officially known as A1 Ethniki Katigoria (Greek: Α1 Εθνική Κατηγορία, lit. 'A1 National Division'), is a professional association football league in Greece and the highest level of the Greek football league system. Formed on 16 July 2006, it replaced Alpha Ethniki Katigoria as the country's first tier league. The members of the cooperative are the Football Anonymous Companies (P.A.E.) that have the right to participate in the Super League 1 championship. The president of Super League 1 is Vangelis Marinakis, who has been re-elected for the third time.\r\n\r\nIt consists of 14 teams and runs from August to May, with teams playing 26 games each followed by 6-game Championship play-offs to decide the champions."
+    }
+  ]
+}

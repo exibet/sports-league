@@ -1,0 +1,15 @@
+{
+  "leagues": [
+    {
+      "idLeague": "4329",
+      "strLeague": "English League Championship",
+      "strSport": "Soccer",
+      "strCountry": "England",
+      "intFormedYear": "2004",
+      "strCurrentSeason": "2026-2027",
+      "strWebsite": "www.efl.com/competitions/efl-championship",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badge/ty5a681688770169.png",
+      "strDescriptionEN": "The English Football League Championship is the highest division of the English Football League (EFL) and second-highest overall in the English football league system, sitting below the Premier League contested by 24 professional clubs from England and Wales.\r\n\r\nIn its present form, the Championship traces its legacy to the original Football League Second Division, which became the First Division in 1992 when the top flight of English football was reorganised as the Premier League. The current competition was intended for the 2004–05 season as the Football League Championship as a rebrand of the First Division. The winning club of this division each season receives the EFL Championship trophy, which was the previous trophy awarded to the winners of the English top-flight prior to the launch of the Premier League. As with other divisions of professional English football, Welsh clubs can be part of this division, thus making it a cross-border league."
+    }
+  ]
+}

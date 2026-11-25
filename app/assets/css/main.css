@@ -13,6 +13,17 @@
   --color-badge-plate: var(--badge-plate);
 }
 
+/* A 44 px touch target around an inline link on a 20 px line, without changing the layout. */
+@utility touch-target {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -12px 0;
+  }
+}
+
 html {
   /* Focus moving to a row above the viewport must not end up under the sticky header. */
   scroll-padding-top: var(--ui-header-height);

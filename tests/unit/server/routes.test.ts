@@ -7,6 +7,7 @@ vi.mock('#server/utils/sportsdb/client', () => ({ fetchUpstream: vi.fn() }))
 
 const LEAGUES_CACHE = 'public, max-age=60, s-maxage=1800, stale-while-revalidate=1800'
 const SEASONS_CACHE = 'public, max-age=60, s-maxage=604800, stale-while-revalidate=604800'
+const DETAILS_CACHE = 'public, max-age=60, s-maxage=86400, stale-while-revalidate=86400'
 
 let stubs: NitroStubs
 let get: (path: string) => Promise<Response>
@@ -18,11 +19,12 @@ async function setup(memoise: boolean) {
   stubs = installNitroStubs({ memoise })
   const client = await import('#server/utils/sportsdb/client')
   upstream = vi.mocked(client.fetchUpstream)
-  upstream.mockImplementation(async (_options, endpoint, query) =>
-    endpoint === 'all_leagues.php'
-      ? readJsonFixture('all_leagues.live.json')
-      : readJsonFixture(`seasons/${query?.id}.json`),
-  )
+  const fixtures: Record<string, (id: unknown) => string> = {
+    'all_leagues.php': () => 'all_leagues.live.json',
+    'search_all_seasons.php': id => `seasons/${id}.json`,
+    'lookupleague.php': id => `details/${id}.json`,
+  }
+  upstream.mockImplementation(async (_options, endpoint, query) => readJsonFixture(fixtures[endpoint]!(query?.id)))
   get = await loadApiRoutes()
 }
 
@@ -123,6 +125,7 @@ describe('API routes', () => {
     expect(stubs.declarations).toEqual([
       { name: 'leagues', maxAge: 1800, swr: true, hasGetKey: true },
       { name: 'seasons', maxAge: 604800, swr: true, hasGetKey: true },
+      { name: 'details', maxAge: 86400, swr: true, hasGetKey: true },
     ])
   })
 
@@ -139,8 +142,64 @@ describe('API routes', () => {
   })
 })
 
+describe('GET /api/leagues/:id', () => {
+  beforeEach(() => setup(false))
+
+  it('returns the details and the seasons with cache headers', async () => {
+    const response = await get('/api/leagues/4328')
+    const body: unknown = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('cache-control')).toBe(DETAILS_CACHE)
+    expect(body).toHaveProperty('details.name', 'English Premier League')
+    expect(body).toHaveProperty('details.website', expect.stringMatching(/^https:\/\//))
+    expect(body).toHaveProperty('seasons.length', 5)
+  })
+
+  it.each([['abc', 400], ['999999', 404]])('answers %s with %i, no per-league upstream call', async (id, status) => {
+    const response = await get(`/api/leagues/${id}`)
+
+    expect(response.status).toBe(status)
+    expect(response.headers.get('cache-control')).toBeNull()
+    expect(upstreamCalls('lookupleague.php') + upstreamCalls('search_all_seasons.php')).toBe(0)
+  })
+
+  it('a listed league without details upstream is a 502, not a cached 404', async () => {
+    const answer = upstream.getMockImplementation()
+    upstream.mockImplementation(async (options, endpoint, query) =>
+      endpoint === 'lookupleague.php' ? { leagues: null } : answer?.(options, endpoint, query))
+
+    const response = await get('/api/leagues/4328')
+
+    expect(response.status).toBe(502)
+    expect(response.headers.get('cache-control')).toBeNull()
+  })
+
+  it('a failure is a 502 without Cache-Control', async () => {
+    await failUpstream('lookupleague.php')
+
+    const response = await get('/api/leagues/4328')
+
+    expect(response.status).toBe(502)
+    expect(response.headers.get('cache-control')).toBeNull()
+  })
+
+  it('reads the seasons from the same cached function as the seasons route', async () => {
+    await get('/api/leagues/4328')
+
+    expect(stubs.keys).toContainEqual({ name: 'seasons', key: '4328' })
+  })
+})
+
 describe('API routes behind a cache that never stores errors', () => {
   beforeEach(() => setup(true))
+
+  it('the league page reuses the seasons cached by the list', async () => {
+    await get('/api/leagues/4328/seasons')
+    await get('/api/leagues/4328')
+
+    expect(upstreamCalls('search_all_seasons.php')).toBe(1)
+  })
 
   it('a repeat request makes no upstream call', async () => {
     await get('/api/leagues/4328/seasons')

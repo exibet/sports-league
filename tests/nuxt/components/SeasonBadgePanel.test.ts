@@ -100,3 +100,21 @@ describe('SeasonBadgePanel', () => {
     expect(load).toHaveBeenCalledWith(EPL.id)
   })
 })
+
+describe('SeasonBadgePanel: league details link', () => {
+  beforeEach(async () => {
+    router = useRouter()
+    await router.replace('/')
+  })
+
+  it.each<[string, BadgeEntry | undefined]>([
+    ['with badges', { status: 'success', badges: BADGES }],
+    ['without badges', { status: 'success', badges: [] }],
+    ['after a failure', { status: 'error', message: 'TheSportsDB failed.' }],
+    ['while loading', { status: 'pending' }],
+  ])('links to the league page %s', async (_case, entry) => {
+    const { wrapper } = await mountPanel(entry)
+
+    expect(wrapper.findAll('a[href="/leagues/4328"]').map(link => link.text())).toEqual(['League details'])
+  })
+})

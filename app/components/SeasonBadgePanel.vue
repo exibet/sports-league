@@ -10,13 +10,18 @@ const list = useLeagueListStore()
 /** Two columns: the badge, then the info over the picker; narrow screens put the picker below. */
 const GRID = [
   'grid grid-cols-[96px_minmax(0,1fr)] gap-x-4 gap-y-3',
-  '@[520px]:max-w-154 @[520px]:grid-cols-[120px_minmax(0,1fr)]',
+  '@[520px]:max-w-154 @[520px]:grid-cols-[120px_minmax(0,1fr)_auto]',
 ]
 const BADGE = 'size-24 @[520px]:row-span-2 @[520px]:size-30'
-const PICKER = 'col-span-2 @[520px]:col-span-1 @[520px]:col-start-2 @[520px]:self-end'
+const PICKER = 'col-span-2 @[520px]:col-start-2 @[520px]:self-end'
+/** "League details": wide, top right next to the info; narrow and in the other states, below. */
+const LINK_IN_GRID = [
+  'col-span-2 row-start-3 justify-self-start',
+  '@[520px]:col-span-1 @[520px]:col-start-3 @[520px]:row-start-1 @[520px]:self-start',
+]
 
 const entry = computed(() => badges.entries[props.league.id])
-const loaded = computed(() => entry.value?.status === 'success' ? entry.value.badges : [])
+const loaded = computed(() => badges.badgesOf(props.league.id))
 const seasons = computed(() => loaded.value.map(badge => badge.season))
 // `?season=` when this league has it, otherwise its first season.
 const position = computed(() => Math.max(0, seasons.value.findIndex(season => season === list.season)))
@@ -73,6 +78,10 @@ onMounted(() => badges.load(props.league.id))
           Badge {{ position + 1 }} of {{ loaded.length }}
         </p>
       </div>
+      <LeagueDetailsLink
+        :id="league.id"
+        :class="LINK_IN_GRID"
+      />
       <SeasonPicker
         :class="PICKER"
         :seasons="seasons"
@@ -111,5 +120,10 @@ onMounted(() => badges.load(props.league.id))
         class="h-11 w-full rounded-lg"
       />
     </div>
+    <LeagueDetailsLink
+      v-if="!selected"
+      :id="league.id"
+      class="mt-3"
+    />
   </div>
 </template>

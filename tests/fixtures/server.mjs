@@ -41,6 +41,11 @@ function handle(request, response) {
     const known = existsSync(new URL(`upstream/${file}`, root))
     return json(response, 200, fixture(known ? file : 'seasons-unknown-id.json'))
   }
+  if (url.pathname.endsWith('/lookupleague.php')) {
+    const file = `details/${url.searchParams.get('id')}.json`
+    const known = /^\d+$/.test(url.searchParams.get('id') ?? '') && existsSync(new URL(`upstream/${file}`, root))
+    return json(response, 200, known ? fixture(file) : '{"leagues":null}')
+  }
   if (url.pathname.startsWith('/images/')) {
     response.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'public, max-age=86400' })
     return response.end(readFileSync(fileURLToPath(new URL(`images/${imageFor(url.pathname)}`, root))))

@@ -1,0 +1,15 @@
+{
+  "leagues": [
+    {
+      "idLeague": "4370",
+      "strLeague": "Formula 1",
+      "strSport": "Motorsport",
+      "strCountry": "Worldwide",
+      "intFormedYear": "1950",
+      "strCurrentSeason": "2026",
+      "strWebsite": "www.formula1.com",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badge/g8cofl1513623681.png",
+      "strDescriptionEN": "The FIA Formula One World Championship (also Formula One, or F1) is the highest class of single-seat auto racing that is sanctioned by the Fédération Internationale de l'Automobile (FIA). The \"formula\", designated in the name, refers to a set of rules with which all participants' cars must comply. The F1 season consists of a series of races, known as Grands Prix (from French, originally meaning great prizes), held throughout the world on purpose-built circuits and public roads. The results of each race are evaluated using a points system to determine two annual World Championships, one for the drivers and one for the constructors. The racing drivers, constructor teams, track officials, organisers, and circuits are required to be holders of valid Super Licences, the highest class of racing licence issued by the FIA.\r\n\r\nFormula One cars are the fastest road course racing cars in the world, owing to very high cornering speeds achieved through the generation of large amounts of aerodynamic downforce. Formula One cars race at speeds of up to 360 km/h (220 mph) with engines currently limited in performance to a maximum of 15,000 RPM. The cars are capable of lateral acceleration in excess of five g in corners. The performance of the cars is very dependent on electronics – although traction control and other driving aids have been banned since 2008 – and on aerodynamics, suspension and tyres. The formula has radically evolved and changed through the history of the sport."
+    }
+  ]
+}

@@ -32,7 +32,8 @@ stops at "ready to commit" and waits.
    whose `Depends on` steps are `[x]`. If a dependency is not done, say so and ask.
    Skip `[-]` steps; a dependency on a `[-]` step means ask.
    **Phase gate:** Phase 3 starts after P2.8 is `[x]`; a later phase starts only after the
-   previous phase's commit is made. No phase branches; one local commit on `main` per phase.
+   previous phase's commit is made. Work on `dev`, one commit per phase; `main` changes only
+   through a `dev` → `main` PR that the owner merges (push and PR only when the owner asks).
    **Owner steps** (marked "(owner)"): list the owner's actions, wait for the confirmation, then
    tick; no implementation, review or commit. P2.8 is the one owner step with a commit: it stays
    `[ ]` in that commit and is ticked in the next one.

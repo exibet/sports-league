@@ -43,5 +43,16 @@ export const useSeasonBadgesStore = defineStore('seasonBadges', () => {
     return request
   }
 
-  return { entries, load }
+  /** Badges that arrived with another response (the league page): cached as if loaded. */
+  function seed(id: string, badges: SeasonBadge[]) {
+    entries.value[id] = { status: 'success', badges }
+  }
+
+  /** The cached badges of a league, or none yet. */
+  function badgesOf(id: string): SeasonBadge[] {
+    const entry = entries.value[id]
+    return entry?.status === 'success' ? entry.badges : []
+  }
+
+  return { entries, load, seed, badgesOf }
 })

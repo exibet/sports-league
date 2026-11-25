@@ -1,0 +1,15 @@
+{
+  "leagues": [
+    {
+      "idLeague": "4332",
+      "strLeague": "Italian Serie A",
+      "strSport": "Soccer",
+      "strCountry": "Italy",
+      "intFormedYear": "1929",
+      "strCurrentSeason": "2026-2027",
+      "strWebsite": "www.legaseriea.it/it",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badge/67q3q21679951383.png",
+      "strDescriptionEN": "The Serie A (Italian pronunciation: ), officially known as Serie A enilive in Italy and Serie A Made in Italy abroad for sponsorship reasons, is a professional league competition for football clubs located at the top of the Italian football league system. The winners are awarded the Coppa Campioni d'Italia trophy and the scudetto, a decoration that they wear on the jersey the season after the victory. It has been operating as a round-robin tournament for over ninety years since the 1929–30 season. It had been organized by the Direttorio Divisioni Superiori until 1943, the Lega Calcio until 2010, and the Lega Serie A ever since. Serie A is regarded as one of the best football leagues in the world and it is often depicted as the most tactical and defensively sound national league. Serie A was ranked the world's best national league in 2023 by IFFHS, and is ranked second among European leagues according to UEFA's league coefficient – behind the Premier League, and ahead of La Liga, Bundesliga and Ligue 1 – which is based on the performance of Italian clubs in the Champions League and the Europa League during the previous five years. Serie A led the UEFA ranking from 1986 to 1988 and from 1990 to 1999.\r\n\r\nIn its current format, the Italian Football Championship was revised from having regional and interregional rounds, to a single-tier league from the 1929–30 season onwards. The championship titles won before 1929 are officially recognised by FIGC with the same weighting as titles that were subsequently awarded. Similarly, the 1945–46 season, when the round-robin was suspended and the league was played over two geographical groups due to the ravages of World War II, is not statistically considered, even if its title is fully official."
+    }
+  ]
+}

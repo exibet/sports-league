@@ -62,3 +62,25 @@ test('on a short page the footer is on screen without scrolling', async ({ page 
 
   await expect(page.getByRole('contentinfo')).toBeInViewport()
 })
+
+test('a league page renders on the server with its details and badges', async ({ page }) => {
+  await page.goto('/leagues/4328')
+
+  await expect(page.getByRole('heading', { level: 1, name: 'English Premier League' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'About' })).toBeVisible()
+  await expect(page.getByRole('img', { name: /English Premier League badge, season/ })).toHaveCount(5)
+  await expect(page.getByRole('link', { name: /premierleague\.com/ })).toHaveAttribute('rel', /noopener/)
+})
+
+test.describe('unknown league pages', () => {
+  test.use({ expectedConsole: [/status of 404/] })
+
+  const UNKNOWN = ['/leagues/999999', '/leagues/abc']
+  UNKNOWN.forEach(path => test(`${path} is a 404 page`, async ({ page }) => {
+    const response = await page.goto(path)
+
+    expect(response?.status()).toBe(404)
+    await expect(page.getByText('League not found')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'All leagues' })).toBeVisible()
+  }))
+})

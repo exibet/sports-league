@@ -12,9 +12,8 @@ const PROJECT_LINKS = [
 ]
 
 // One rhythm for every column: a 28 px heading row, then 20 px lines 8 px apart. Links keep a
-// 44 px touch target through a pseudo-element, without breaking that rhythm.
+// 44 px touch target (`touch-target`) without breaking that rhythm.
 const HEADING = 'flex h-7 items-center text-xs font-semibold tracking-wide text-muted uppercase'
-const LINK_TARGET = 'relative after:absolute after:inset-x-0 after:-inset-y-3'
 </script>
 
 <template>
@@ -62,8 +61,7 @@ const LINK_TARGET = 'relative after:absolute after:inset-x-0 after:-inset-y-3'
             <ULink
               :to="link.to"
               target="_blank"
-              class="inline-flex items-center gap-1 text-muted hover:text-highlighted"
-              :class="LINK_TARGET"
+              class="touch-target inline-flex items-center gap-1 text-muted hover:text-highlighted"
             >
               {{ link.label }}
               <UIcon

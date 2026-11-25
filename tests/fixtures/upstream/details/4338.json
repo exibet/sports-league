@@ -1,0 +1,15 @@
+{
+  "leagues": [
+    {
+      "idLeague": "4338",
+      "strLeague": "Belgian Pro League",
+      "strSport": "Soccer",
+      "strCountry": "Belgium",
+      "intFormedYear": "1895",
+      "strCurrentSeason": "2026-2027",
+      "strWebsite": "proleague.be",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badge/xj8azr1786316931.png",
+      "strDescriptionEN": "The Belgian Pro League, officially the Jupiler Pro League (Dutch pronunciation: ) for sponsorship reasons, is a professional association football league in Belgium and the highest level of the Belgian football league system. Contested by 18 clubs from 2026–27 onwards, it operates on a system of promotion and relegation with the Challenger Pro League.\r\n\r\nSeasons run from late July to late March, with teams playing 30 matches each in the regular season, and then entering Play-offs I (also known as the Championship Playoff, title playoffs or Champions' play-offs), Play-offs II (also known as the Europa League playoff or Europe play-offs) or Play-offs III (also known as the Relegation play-offs) according to their position in the regular season. Play-offs I are contested by the top-six clubs in the regular season, with each club playing each other twice. The teams finishing in 15th and 16th place are relegated directly, however, the 14th place team plays a promotion-relegation play-off against the 3rd place team of the Challenger Pro League."
+    }
+  ]
+}

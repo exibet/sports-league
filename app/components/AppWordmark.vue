@@ -11,11 +11,7 @@ const classes = computed(() => SIZES[props.size])
 <template>
   <NuxtLink
     to="/"
-    :class="[
-      'relative flex items-center gap-2.5 rounded-md focus-visible:outline-2 focus-visible:outline-primary',
-      // A 44 px touch target around the smaller visible logo.
-      'after:absolute after:inset-x-0 after:-inset-y-2',
-    ]"
+    class="touch-target flex items-center gap-2.5 rounded-md focus-visible:outline-2 focus-visible:outline-primary"
     aria-label="Sports Leagues, home"
   >
     <span

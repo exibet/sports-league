@@ -70,7 +70,7 @@ type SeasonsResponse = {
 
 ### `lookupleague.php?id={id}` — league details (league page only)
 
-Unknown id (`999999`) → `{"leagues":null}` → our route answers 404.
+Unknown id (`999999`) → `{"leagues":null}`. Our route never asks for one: an id not in the cached league list is a 404 before this call, so `leagues: null` for a listed id is treated as an upstream failure (502, not cached).
 
 47 fields. The ones we use:
 
@@ -129,7 +129,8 @@ Errors:
 
 - non-numeric `:id` → 400; an id not in the cached league list → 404 (no per-league upstream
   call in either case; validation may load the cached league list);
-- `seasons: null`, the error string or all-null badges → `[]`; `leagues: null` → 404;
+- `seasons: null`, the error string or all-null badges → `[]`; `leagues: null` from `lookupleague`
+  for a listed id → 502 (an upstream failure, never cached as a 404);
 - upstream timeout (8 s), 429, `1015`, another error status or non-JSON → 502 with a readable
   `message` and the failure kind in `data.reason` (`rate-limited`, `timeout`, `unreachable`,
   `bad-status`, `invalid-response`), not cached. These are detected **before** normalisation, so

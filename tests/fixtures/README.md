@@ -17,9 +17,10 @@ Tests never call the live API.
 | `seasons-unknown-id.json` | synthetic | `{"seasons":null}`, the answer for an unknown id |
 | `seasons-invalid-id.json` | synthetic | the error string sent with HTTP 200 for a non-numeric id |
 | `rate-limited.txt` | real capture | the plain-text Cloudflare body sent with HTTP 429 |
+| `details/*.json` | real captures, trimmed | `lookupleague.php` for all 12 fixture leagues, cut to the fields the adapter reads and the first two paragraphs of the English description (with its leftover pronunciation fragments; websites without a scheme) |
 
 Real captures were taken once on 2026-11-25 with the free key `123`, sequentially, and
-pretty-printed. The rate limit blocked the capture after ten requests, so the synthetic files
+pretty-printed (the details 9 s apart, which stayed under the rate limit). The rate limit blocked the capture after ten requests, so the synthetic files
 reproduce responses recorded in [`docs/api.md`](../../docs/api.md) instead of being captured;
 their badge file names are made up.
 

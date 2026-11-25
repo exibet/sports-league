@@ -98,9 +98,10 @@ hydration warnings). Never weaken a rule, threshold or test to make a check pass
   report, ask.
 - Conventional Commits (`feat(leagues): …`), lowercase type, summary ≤ 72 chars, body lines ≤ 100.
 - **Never add a `Co-Authored-By` trailer.** Never use `--no-verify`.
-- All commits go to the local `main`, one per plan phase after the owner reviews it; no phase
-  branches, no PRs. The remote,
-  CI on GitHub, Vercel and the `main` ruleset come at delivery (Phase 8 of `docs/plan.md`).
+- Work happens on `dev`, one commit per plan phase after the owner reviews it. `main` is what
+  Vercel deploys and is protected by a ruleset (PR required, linear history, required check
+  "Lint, Typecheck, Test, Build"): code reaches it through a `dev` → `main` PR that the owner
+  merges (rebase). Push `dev` and open that PR only when the owner asks.
 
 ## Skills
 
