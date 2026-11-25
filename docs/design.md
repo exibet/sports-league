@@ -94,4 +94,7 @@ component hardcodes a color; everything goes through the tokens below.
   panels.
 - Count is `aria-live="polite"`; icon-only buttons have `aria-label`; decorative icons are
   `aria-hidden`; external links say "(opens in a new tab)" for screen readers.
+- Every page has one `h1` (the list title, the league name, the error page's title). Empty-state
+  titles inside a row or section are plain text, not headings.
+- Client-side navigation is announced: `NuxtRouteAnnouncer` reads the new page title.
 - Text contrast ≥ 4.5:1 in both themes (see token notes).

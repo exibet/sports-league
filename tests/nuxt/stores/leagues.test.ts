@@ -35,7 +35,7 @@ describe('leagues store', () => {
     expect(store.leagues).toEqual(LEAGUES)
     expect(store.fetchedAt).toBe(FETCHED_AT)
     expect(store.status).toBe('success')
-    expect(store.error).toBeNull()
+    expect(store.error).toBeUndefined()
   })
 
   it('a second load() makes no request', async () => {
@@ -76,7 +76,7 @@ describe('leagues store', () => {
 
     expect(answer).toHaveBeenCalledTimes(2)
     expect(store.status).toBe('success')
-    expect(store.error).toBeNull()
+    expect(store.error).toBeUndefined()
   })
 
   it('derives sportOptions from the leagues', async () => {

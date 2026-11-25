@@ -85,6 +85,12 @@ describe('league details store', () => {
     expect(store.entries['4329']?.status).toBe('success')
   })
 
+  it('opening a league in the list without visiting its page requests its seasons', async () => {
+    await useSeasonBadgesStore().load('4328')
+
+    expect(seasonsRequests).toHaveBeenCalledTimes(1)
+  })
+
   it('opening the same league in the list afterwards makes no seasons request', async () => {
     await useLeagueDetailsStore().load('4328')
 

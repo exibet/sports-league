@@ -6,7 +6,8 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'en' },
-      title: 'Sports Leagues',
+      // Every page sets its own title; this adds the app name to it.
+      titleTemplate: '%s · Sports Leagues',
       link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
     },
   },

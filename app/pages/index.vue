@@ -8,7 +8,7 @@ const list = useLeagueListStore()
 await callOnce('leagues', () => leagues.load(), { mode: 'navigation' })
 
 useSeoMeta({
-  title: 'Leagues · Sports Leagues',
+  title: 'Leagues',
   description: 'Sports leagues from TheSportsDB with search, a sport filter and season badges.',
 })
 </script>
@@ -25,7 +25,7 @@ useSeoMeta({
       v-if="leagues.status === 'error'"
       class="mt-6"
       title="Couldn’t load leagues"
-      :description="leagues.error ?? undefined"
+      :description="leagues.error"
       @retry="leagues.load()"
     />
     <LeagueListSkeleton

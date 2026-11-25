@@ -35,10 +35,10 @@ describe('league list store: accordion', () => {
     ['an id filtered out by the search', { open: '4387', q: 'premier' }],
     ['an id filtered out by the sport', { open: '4387', sport: 'Soccer' }],
     ['an array', { open: ['4328', '4330'] }],
-  ])('openId is null for %s', async (_case, query) => {
+  ])('openId is undefined for %s', async (_case, query) => {
     await router.replace({ query })
 
-    expect(setup().openId).toBeNull()
+    expect(setup().openId).toBeUndefined()
   })
 
   it('open(id) sets open and clears season in the same replace', async () => {
@@ -60,7 +60,7 @@ describe('league list store: accordion', () => {
     expect(store.openId).toBe('4330')
 
     await store.toggle('4330')
-    expect(store.openId).toBeNull()
+    expect(store.openId).toBeUndefined()
   })
 
   it('close() drops open and season', async () => {
