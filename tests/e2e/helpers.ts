@@ -28,6 +28,29 @@ export const test = base.extend<GuardOptions & { consoleGuard: undefined }>({
   ],
 })
 
+/** `page.goto`, then wait until Nuxt has hydrated, so the first click or keystroke is not lost. */
+export async function visit(page: Page, url: string) {
+  const response = await page.goto(url)
+  await page.waitForFunction(() => window.useNuxtApp?.().isHydrating === false)
+  return response
+}
+
+export const searchBox = (page: Page) => page.getByRole('textbox', { name: 'Search leagues' })
+export const sportSelect = (page: Page) => page.getByRole('combobox', { name: 'Sport' })
+export const leagueRows = (page: Page) => page.getByRole('main').getByRole('listitem')
+export const leagueButton = (page: Page, name: string) => page.getByRole('button', { name })
+/** The open row's badge panel (footer sections are regions too, hence the `main` scope). */
+export const badgePanel = (page: Page) => page.getByRole('main').getByRole('region')
+
+/** Records the browser's requests for season badges from now on. */
+export function recordSeasonRequests(page: Page): string[] {
+  const urls: string[] = []
+  page.on('request', (request) => {
+    if (/\/api\/leagues\/\d+\/seasons$/.test(new URL(request.url()).pathname)) urls.push(request.url())
+  })
+  return urls
+}
+
 /** How far the page is wider than the viewport, in pixels (0 or less: no horizontal scroll). */
 export function pageOverflow(page: Page): Promise<number> {
   return page.evaluate(() => {

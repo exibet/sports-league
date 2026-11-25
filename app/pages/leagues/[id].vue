@@ -13,7 +13,9 @@ await callOnce(`league-${id}`, () => details.load(id), { mode: 'navigation' })
 
 const entry = computed(() => details.entries[id])
 if (entry.value?.status === 'not-found') {
-  throw createError({ statusCode: 404, statusMessage: 'League not found', fatal: true })
+  // Fatal only in the browser (to replace the page on a client navigation); on the server any
+  // error renders the 404 page anyway, and a fatal one would be logged as a server error.
+  throw createError({ statusCode: 404, statusMessage: 'League not found', fatal: import.meta.client })
 }
 
 const league = computed(() => entry.value?.status === 'success' ? entry.value.details : undefined)

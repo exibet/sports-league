@@ -622,7 +622,7 @@ If this phase is cut: mark its steps and P7.3 `[-]`, and in P8 adjust `README.md
 
 If this phase is cut: mark its steps `[-]`, and in P8 adjust `decisions.md` §4, §5 (the E2E job becoming required), D1 and D2, the R4 note in `requirements.md` (e2e and the README screenshot) and the README top section. All specs run against the production build with the fixture server. No test may depend on test order or on the server cache left by another test.
 
-- [ ] **P7.1 — E2E: search and sport filter**
+- [x] **P7.1 — E2E: search and sport filter**
   - Goal: Prove R3 and R4 in a real browser on mixed-sport data.
   - Depends on: P4.12
   - Files: `tests/e2e/filters.spec.ts`, `tests/e2e/helpers.ts`
@@ -639,9 +639,10 @@ If this phase is cut: mark its steps `[-]`, and in P8 adjust `decisions.md` §4,
   - Verify: `npm run build && npm run test:e2e`.
   - Out of scope: production code changes (a failing flow is reported and fixed as its own `fix` commit).
   - Commit: `test(e2e): cover search and sport filter`
+  - Notes: every spec opens pages through `visit()` (from the phase review): `page.goto` plus a wait for Nuxt's hydration, so a first click or keystroke is never lost on a slow runner. URLs are asserted with `toHaveURL`.
   - Requirements: R3, R4
 
-- [ ] **P7.2 — E2E: accordion, season switch, cached reopen, error and retry**
+- [x] **P7.2 — E2E: accordion, season switch, cached reopen, error and retry**
   - Goal: Prove R7 and R8 as the user sees them.
   - Depends on: P7.1
   - Files: `tests/e2e/badges.spec.ts`
@@ -658,9 +659,10 @@ If this phase is cut: mark its steps `[-]`, and in P8 adjust `decisions.md` §4,
   - Verify: `npm run build && npm run test:e2e`, twice in a row and with `--repeat-each=2`.
   - Out of scope: 1015 mapping (unit tests, P3.2).
   - Commit: `test(e2e): cover season badges, caching and retry`
+  - Notes: the cached-reopen test records requests from before the first open and expects exactly one, so an empty list cannot pass for the wrong reason (phase review).
   - Requirements: R7, R8
 
-- [ ] **P7.3 — E2E: league page and back (skip if Phase 6 was cut)**
+- [x] **P7.3 — E2E: league page and back (skip if Phase 6 was cut)**
   - Goal: Prove the list ↔ league page round trip.
   - Depends on: P7.2, P6.4
   - Files: `tests/e2e/league-page.spec.ts`
@@ -675,9 +677,10 @@ If this phase is cut: mark its steps `[-]`, and in P8 adjust `decisions.md` §4,
   - Verify: `npm run build && npm run test:e2e`.
   - Out of scope: SEO tag assertions beyond the title.
   - Commit: `test(e2e): cover league page navigation`
+  - Notes: the delayed details request is held by `Promise.withResolvers` (no timer), and the test asserts the new URL while the request is held, so the kept list is proved during loading (phase review). The unknown-id 404 is covered by the smoke test, not repeated here. Writing it found server-log noise: a fatal 404 thrown during SSR is logged as a server error by Nitro, so the page's 404 is fatal only in the browser.
   - Requirements: R5, E1
 
-- [ ] **P7.4 — Sport-filter screenshot and README top section**
+- [x] **P7.4 — Sport-filter screenshot and README top section**
   - Goal: Show the sport dropdown to a reviewer who only reads the README (D1).
   - Depends on: P7.1
   - Files: `tests/e2e/screenshot.spec.ts`, `docs/readme/sport-filter.png`, `package.json`, `README.md`, `playwright.config.ts`, `CLAUDE.md` (commands block gains `screenshot`)
@@ -686,9 +689,10 @@ If this phase is cut: mark its steps `[-]`, and in P8 adjust `decisions.md` §4,
   - Verify: run `npm run screenshot` and view the image; the README renders it in a Markdown preview.
   - Out of scope: the rest of the README (P8.1).
   - Commit: `docs(readme): add sport filter screenshot`
+  - Notes: the spec is tagged `@screenshot` and excluded from every run unless `README_SCREENSHOT` is set, which `npm run screenshot` does; Playwright's `animations: 'disabled'` keeps the open menu from being captured mid-fade.
   - Requirements: R4, R12
 
-**Checkpoint (Phase 7):** commits P7.1–P7.4 on `main`. `npm run test:e2e` is green twice in a row (stability). The README shows the screenshot in a Markdown preview. Making `E2E` a required check happens in P8.6.
+**Checkpoint (Phase 7):** one commit for P7.1–P7.4 on `dev`. `npm run test:e2e` is green twice in a row (stability). The README shows the screenshot in a Markdown preview. Making `E2E` a required check happens in P8.6.
 
 ---
 

@@ -1,4 +1,4 @@
-import { expect, pageOverflow, test } from './helpers'
+import { expect, pageOverflow, recordSeasonRequests, test, visit } from './helpers'
 
 const FIXTURE_LEAGUES = 12
 
@@ -9,7 +9,7 @@ test('the list page renders from the production build with a clean console', asy
     if (url.protocol !== 'data:' && url.hostname !== 'localhost') foreign.push(request.url())
   })
 
-  await page.goto('/')
+  await visit(page, '/')
 
   await expect(page.getByRole('heading', { level: 1, name: 'Leagues' })).toBeVisible()
   await expect(page.getByRole('main').getByRole('listitem')).toHaveCount(FIXTURE_LEAGUES)
@@ -22,19 +22,16 @@ test('the list page renders from the production build with a clean console', asy
 
 test('the list page has no horizontal scroll at 390 px', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/')
+  await visit(page, '/')
   await expect(page.getByRole('main').getByRole('listitem')).toHaveCount(FIXTURE_LEAGUES)
 
   expect(await pageOverflow(page)).toBeLessThanOrEqual(0)
 })
 
 test('a URL with ?open= and ?season= renders the badge on the server', async ({ page }) => {
-  const seasonsRequests: string[] = []
-  page.on('request', (request) => {
-    if (request.url().includes('/seasons')) seasonsRequests.push(request.url())
-  })
+  const seasonsRequests = recordSeasonRequests(page)
 
-  await page.goto('/?open=4328&season=1993-1994')
+  await visit(page, '/?open=4328&season=1993-1994')
 
   const badge = page.getByRole('img', { name: 'English Premier League badge, season 1993/94' })
   await expect(badge).toBeVisible()
@@ -47,7 +44,7 @@ test('a URL with ?open= and ?season= renders the badge on the server', async ({ 
 
 test('an open league fits a 320 px screen, season picker included', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 })
-  await page.goto('/?open=4328')
+  await visit(page, '/?open=4328')
   await expect(page.getByRole('radiogroup', { name: 'Season' })).toBeVisible()
 
   const picker = await page.getByRole('radiogroup', { name: 'Season' }).boundingBox()
@@ -58,13 +55,13 @@ test('an open league fits a 320 px screen, season picker included', async ({ pag
 
 test('on a short page the footer is on screen without scrolling', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
-  await page.goto('/?q=premier')
+  await visit(page, '/?q=premier')
 
   await expect(page.getByRole('contentinfo')).toBeInViewport()
 })
 
 test('a league page renders on the server with its details and badges', async ({ page }) => {
-  await page.goto('/leagues/4328')
+  await visit(page, '/leagues/4328')
 
   await expect(page.getByRole('heading', { level: 1, name: 'English Premier League' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'About' })).toBeVisible()
@@ -77,7 +74,7 @@ test.describe('unknown league pages', () => {
 
   const UNKNOWN = ['/leagues/999999', '/leagues/abc']
   UNKNOWN.forEach(path => test(`${path} is a 404 page`, async ({ page }) => {
-    const response = await page.goto(path)
+    const response = await visit(page, path)
 
     expect(response?.status()).toBe(404)
     await expect(page.getByText('League not found')).toBeVisible()

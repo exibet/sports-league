@@ -1,11 +1,10 @@
 import { defineConfig, devices } from '@playwright/test'
-
-// Fixed ports, different from `dev:fixtures` (3000 / 3901), so a running dev session does not clash.
-const APP_PORT = 3920
-const FIXTURE_PORT = 3921
+import { APP_PORT, FIXTURE_PORT } from './tests/e2e/ports'
 
 export default defineConfig({
   testDir: 'tests/e2e',
+  // The README capture runs only through `npm run screenshot`.
+  grepInvert: process.env.README_SCREENSHOT ? undefined : /@screenshot/,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: 0,
