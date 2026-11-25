@@ -1,0 +1,31 @@
+# Dependencies
+node_modules
+
+# Nuxt / Nitro build output
+.nuxt
+.output
+.nitro
+.data
+.cache
+dist
+
+# Tests
+coverage
+test-results
+playwright-report
+blob-report
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Hosting
+.vercel
+
+# Logs and OS files
+*.log
+.DS_Store
+
+# Local Claude Code settings
+.claude/settings.local.json
