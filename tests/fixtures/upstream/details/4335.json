@@ -1,0 +1,15 @@
+{
+  "leagues": [
+    {
+      "idLeague": "4335",
+      "strLeague": "Spanish La Liga",
+      "strSport": "Soccer",
+      "strCountry": "Spain",
+      "intFormedYear": "1929",
+      "strCurrentSeason": "2026-2027",
+      "strWebsite": "www.laliga.com",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badge/ja4it51687628717.png",
+      "strDescriptionEN": "The Campeonato Nacional de Liga de Primera División, commonly known as the Primera División or La Liga, and officially known as LaLiga EA Sports for sponsorship reasons, is a professional association football league in Spain and the highest level of the Spanish football league system. It is controlled by the Liga Nacional de Fútbol Profesional and is contested by 20 teams over a 38-matchday period.\r\n\r\nSince its inception, 63 teams have competed in La Liga, with nine teams crowned champions. Real Madrid and Barcelona have dominated the competition, winning 36 and 29 titles respectively. In the 1940s, Valencia, Atlético Madrid, and Barcelona emerged as the strongest clubs. Real Madrid and Barcelona led the charge in the 1950s, each winning four titles. During the 1960s and 1970s, Real Madrid dominated with fourteen titles, with Atlético Madrid winning four. During the 1980s and 1990s, Real Madrid remained prominent, while the Basque clubs of Athletic Bilbao and Real Sociedad enjoyed success, each winning two titles. From the 1990s onward, Barcelona have been the most successful club, winning seventeen titles, with Real Madrid close behind. La Liga has seen other champions, including Valencia and Deportivo La Coruña."
+    }
+  ]
+}

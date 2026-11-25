@@ -1,0 +1,15 @@
+{
+  "leagues": [
+    {
+      "idLeague": "4337",
+      "strLeague": "Dutch Eredivisie",
+      "strSport": "Soccer",
+      "strCountry": "The Netherlands",
+      "intFormedYear": "1956",
+      "strCurrentSeason": "2026-2027",
+      "strWebsite": "www.eredivisie.nl",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badge/5cdsu21725984946.png",
+      "strDescriptionEN": "The Eredivisie (Dutch pronunciation: ; \"Honour Division\" or \"Premier Division\"), also known as VriendenLoterij Eredivisie for sponsorship reasons, is a professional association football league in the Netherlands and the highest level of the Dutch football league system. The league was founded in 1956, two years after the start of professional football in the Netherlands. As of the 2024–25 season, it is ranked the seventh-best league in Europe by UEFA.\r\n\r\nThe Eredivisie consists of 18 clubs. Each club meets every other club twice during the season, once at home and once away. At the end of each season, the two clubs at the bottom are relegated to the second level of the Dutch league system, the Eerste Divisie (First Division), while the champion and runner-up of the Eerste Divisie are automatically promoted to the Eredivisie. The club finishing third from the bottom of the Eredivisie goes to separate promotion/relegation play-offs with six high-placed clubs from the Eerste Divisie."
+    }
+  ]
+}

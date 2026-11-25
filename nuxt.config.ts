@@ -73,9 +73,10 @@ export default defineNuxtConfig({
     // Icons come only from the locally installed collections; never from the Iconify API.
     serverBundle: { collections: ['lucide', 'tabler'] },
     fallbackToApi: false,
-    // The sport icons are chosen at runtime from `app/utils/sports.ts`, which the bundle scan of
-    // templates does not see; listing them makes them available without a server round trip.
+    // Every icon ships in the client bundle, so none is fetched at runtime: the scan finds the
+    // ones written in templates, and the sport icons (chosen at runtime) are listed explicitly.
     clientBundle: {
+      scan: true,
       icons: [...Object.values(SPORT_ICONS), GENERIC_SPORT_ICON],
     },
   },

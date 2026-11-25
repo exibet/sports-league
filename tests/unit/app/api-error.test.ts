@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { apiErrorMessage } from '~/utils/api-error'
+import { apiErrorMessage, apiErrorStatus } from '~/utils/api-error'
 
 describe('apiErrorMessage', () => {
   it('reads the message from the response body', () => {
@@ -15,5 +15,15 @@ describe('apiErrorMessage', () => {
     ['a non-object', 'boom'],
   ])('falls back for %s', (_case, error) => {
     expect(apiErrorMessage(error, 'fallback')).toBe('fallback')
+  })
+})
+
+describe('apiErrorStatus', () => {
+  it('reads the status code', () => {
+    expect(apiErrorStatus({ statusCode: 404 })).toBe(404)
+  })
+
+  it.each([new TypeError('fetch failed'), { statusCode: '404' }, null])('is undefined for %j', (error) => {
+    expect(apiErrorStatus(error)).toBeUndefined()
   })
 })

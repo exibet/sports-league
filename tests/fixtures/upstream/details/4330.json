@@ -1,0 +1,15 @@
+{
+  "leagues": [
+    {
+      "idLeague": "4330",
+      "strLeague": "Scottish Premier League",
+      "strSport": "Soccer",
+      "strCountry": "Scotland",
+      "intFormedYear": "2013",
+      "strCurrentSeason": "2026-2027",
+      "strWebsite": "www.spfl.co.uk",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badge/72d3zc1688333496.png",
+      "strDescriptionEN": "The Scottish Premiership, also known as the William Hill Premiership for sponsorship reasons, is a professional association football league in Scotland and the highest level of the Scottish football league system. The top division of the Scottish Professional Football League (SPFL), the Scottish Premiership was established in July 2013, after the SPFL was formed by a merger of the Scottish Premier League and Scottish Football League. There are 12 teams in this division, with each team playing 38 matches per season. Seventeen clubs have played in the Scottish Premiership since its creation in the 2013–14 season."
+    }
+  ]
+}

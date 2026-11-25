@@ -1,0 +1,15 @@
+{
+  "leagues": [
+    {
+      "idLeague": "4334",
+      "strLeague": "French Ligue 1",
+      "strSport": "Soccer",
+      "strCountry": "France",
+      "intFormedYear": "1932",
+      "strCurrentSeason": "2026-2027",
+      "strWebsite": "www.ligue1.com",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badge/9f7z9d1742983155.png",
+      "strDescriptionEN": "Ligue 1 (French: ; lit. 'League 1'), officially known as Ligue 1 McDonald's for sponsorship reasons, is a professional association football league in France and the highest level of the French football league system. Administered by the Ligue de Football Professionnel, Ligue 1 is contested by 18 clubs and operates on a system of promotion and relegation from and to Ligue 2. Seasons run from August to May. Clubs play two matches against each of the other teams in the league – one home and one away – totalling to 34 matches over the course of the season. Most games are played on Saturdays and Sundays, with a few games played during weekday evenings. Play is regularly suspended the last weekend before Christmas for two weeks before returning in the second week of January.\r\n\r\nLigue 1 was inaugurated on 11 September 1932 under the name National before switching to Division 1 after a year of existence. It continued to operate under that name until 2002, when it adopted its current name."
+    }
+  ]
+}

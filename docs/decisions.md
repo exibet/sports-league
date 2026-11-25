@@ -28,9 +28,11 @@ E1), API facts in `api.md`, the visual spec in `design.md`, the implementation p
 | Lint | `@nuxt/eslint` flat config | 1.17 |
 | Hooks | husky + lint-staged + commitlint | — |
 | Icons | Iconify collections installed locally (`@iconify-json/*`), no runtime API calls | — |
-| Runtime | Node `^22.22.3 \|\| ^24.15.0 \|\| >=26` in `engines`, `.nvmrc` 24; npm | — |
+| Runtime | Node `^22.22.3 \|\| ^24.15.0` in `engines`, `.nvmrc` 24, Vercel 24.x; npm | — |
 | Hosting | Vercel, Git integration | — |
 
+- **Node has no open-ended range:** with `>=26` in `engines`, Vercel built on the newest major
+  (26.x) despite the project's 24.x setting; the range now stops at 24, matching `.nvmrc` and CI.
 - **TypeScript is pinned to 6.0** because `typescript@latest` is 7.x and `@typescript-eslint` peers
   `<6.1`; an unpinned install breaks lint.
 - **Why Nuxt UI:** the Nuxt team's own kit; accessible primitives (Reka UI), dark mode, semantic
@@ -66,7 +68,8 @@ server in tests and `dev:fixtures`).
   body and timeouts throw. Only then is the payload normalised, so an error can never be cached as
   "no badges".
 - **Normalisation:** `seasons: null`, the error string and all-null badges become `[]`; seasons
-  with a null badge are dropped; `leagues: null` from `lookupleague` → 404; descriptions keep the
+  with a null badge are dropped; `leagues: null` from `lookupleague` for a listed id → 502 (not
+  cached; the 404 comes from the league-list check); descriptions keep the
   first paragraph with stripped-IPA fragments removed by one regex.
 - **Error responses:** upstream failures → 502 with a readable message and `data.reason`, never
   cached, never leaking the key. A malformed id is a 400 before anything is loaded. Any other
@@ -90,7 +93,8 @@ server in tests and `dev:fixtures`).
    (`dev:fixtures`) never mix on disk.
 2. **HTTP.** Set in the handler **on success only**: `Cache-Control: public, max-age=60,
    s-maxage=<ttl>, stale-while-revalidate=<ttl>`. `max-age` is for the browser, `s-maxage` for the
-   Vercel CDN. Server-rendered requests call `/api` in-process and bypass the CDN; the CDN helps
+   Vercel CDN, which consumes it and serves `public, max-age=60` (a repeat request shows
+   `x-vercel-cache: HIT`). Server-rendered requests call `/api` in-process and bypass the CDN; the CDN helps
    client-side fetches.
 3. **Client.**
    - The list page loads the leagues with `await callOnce('leagues', () => store.load(),
@@ -212,11 +216,13 @@ server in tests and `dev:fixtures`).
   underneath, aware of the project's directories) with stylistic (no semicolons, single quotes),
   `no-console: error` (allowed only in `scripts/**` and `tests/fixtures/**`, which print to the
   terminal), `@typescript-eslint/no-explicit-any: error`, `vue/max-len: 120`.
-- **Git flow:** all work is committed locally on `main`, one commit per plan phase (made after the
-  owner reviews the phase), with no phase branches and no PRs. Publishing comes last, at delivery: the first push and CI run, Vercel, then
-  a ruleset on `main` (no deletion or force-push, linear history, PR required, rebase or squash
-  merge, required checks "Lint, Typecheck, Test, Build" and `E2E`). History is never rewritten
-  after the first push. Until then, every plan step runs the CI commands locally in CI order.
+- **Git flow:** Phases 2–5 were committed locally on `main`, one commit per phase. Once the core
+  brief was done, `main` was published (public repository, CI, Vercel production from `main`) and
+  protected by a ruleset: no deletion or force-push, linear history, PR required (0 approvals,
+  rebase or squash merge), required check "Lint, Typecheck, Test, Build" (`E2E` runs, not yet
+  required). From Phase 6 on, work happens on `dev`, one commit per phase after the owner's
+  review, and reaches `main` through a `dev` → `main` PR that the owner rebase-merges. History is
+  never rewritten after a push.
 - **Vercel:** Git integration, Nuxt auto-detects the preset, no `vercel.json`. After each deploy,
   warm the cache for every league before sharing the link.
 - **Not used:** dependabot (it would open PRs while the repo is being reviewed), extra Playwright
@@ -252,7 +258,7 @@ Published on purpose (the brief invites AI use and asks to describe it):
 | D10 | Badge UI in the list | Inline accordion panel with `SeasonPicker` and a "League details" link |
 | D11 | Season picker | Both modes (segmented ≤ 5, stepper > 5) in the component from the start |
 | D12 | Footer freshness line | Client-only, only when `fetchedAt` is known |
-| D13 | Git flow | One local commit per phase on `main`, no branches or PRs; push, CI, Vercel and the ruleset at delivery |
+| D13 | Git flow | Phases 2–5 local on `main`; then `main` published and protected; from Phase 6 one commit per phase on `dev`, `dev` → `main` PR merged by the owner |
 
 ## 8. Out of scope (next steps)
 

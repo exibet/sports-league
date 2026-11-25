@@ -2,14 +2,15 @@
 // `useRuntimeConfig` are Nitro auto-imports; everything of our own is imported explicitly.
 import type { H3Event } from 'h3'
 import { LEAGUES_MAX_AGE } from '#shared/constants'
-import type { LeagueList, SeasonBadge } from '#shared/types/league'
+import type { LeagueDetails, LeagueList, SeasonBadge } from '#shared/types/league'
 import { fetchUpstream, type UpstreamClientOptions } from './sportsdb/client'
-import { normaliseLeagues, normaliseSeasons } from './sportsdb/normalise'
+import { normaliseDetails, normaliseLeagues, normaliseSeasons } from './sportsdb/normalise'
 
 const UPSTREAM_TIMEOUT_MS = 8_000
 
 /** Seconds. Archive seasons never change; the league list TTL is shared with the footer. */
 export const SEASONS_MAX_AGE = 60 * 60 * 24 * 7
+export const DETAILS_MAX_AGE = 60 * 60 * 24
 
 /** Browser 60 s; the CDN keeps it for `ttl` and may serve it stale while revalidating. */
 export function cacheControl(ttl: number): string {
@@ -35,4 +36,10 @@ export const getSeasons = defineCachedFunction(
   async (event: H3Event, id: string): Promise<SeasonBadge[]> =>
     normaliseSeasons(await fetchUpstream(upstream(event), 'search_all_seasons.php', { badge: 1, id })),
   { name: 'seasons', getKey: (_event: H3Event, id: string) => id, maxAge: SEASONS_MAX_AGE, swr: true },
+)
+
+export const getDetails = defineCachedFunction(
+  async (event: H3Event, id: string): Promise<LeagueDetails> =>
+    normaliseDetails(await fetchUpstream(upstream(event), 'lookupleague.php', { id })),
+  { name: 'details', getKey: (_event: H3Event, id: string) => id, maxAge: DETAILS_MAX_AGE, swr: true },
 )

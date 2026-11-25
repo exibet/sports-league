@@ -66,13 +66,15 @@ export function installNitroStubs({ memoise }: { memoise: boolean }): NitroStubs
 
 /** Mounts the API handlers on a real h3 app; returns a `Request → Response` function. */
 export async function loadApiRoutes(): Promise<(path: string) => Promise<Response>> {
-  const [{ default: leagues }, { default: seasons }] = await Promise.all([
+  const [{ default: leagues }, { default: seasons }, { default: details }] = await Promise.all([
     import('#server/api/leagues/index.get'),
     import('#server/api/leagues/[id]/seasons.get'),
+    import('#server/api/leagues/[id]/index.get'),
   ])
   const router = createRouter()
     .get('/api/leagues', leagues)
     .get('/api/leagues/:id/seasons', seasons)
+    .get('/api/leagues/:id', details)
   const handle = toWebHandler(createApp().use(router))
   return path => handle(new Request(`http://localhost${path}`))
 }

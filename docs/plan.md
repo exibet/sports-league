@@ -6,7 +6,7 @@ Legend: `[ ]` not started, `[~]` in progress, `[x]` done, `[-]` cut (with a `Not
 Core comes first: Phases 2–4 deliver the whole core brief (R1–R8). Phases 5, 6 and 7 are each independently shippable and cuttable; Phase 8 (delivery) always runs and adapts to what was cut.
 Every git action (init, commit, push, PR, merge) and every dashboard action happens only on the owner's explicit request; steps marked **(owner)** need the owner's hands.
 Commits follow Conventional Commits (lowercase, summary ≤ 72 chars, scope by area, no `Co-Authored-By` trailer, never `--no-verify`).
-Each phase ends in **one local commit on `main`** (no phase branches, no PRs): its steps accumulate in the working tree, the owner reviews the whole phase at its checkpoint, and the commit is made on the owner's command. Its summary names the phase; its body lists the steps' `Commit:` lines; the ticked `docs/plan.md` travels with it. The remote, CI on GitHub, the hosting and the `main` ruleset come at the end, in Phase 8 (owner decision, D13).
+Each phase ends in **one commit**: its steps accumulate in the working tree, the owner reviews the whole phase at its checkpoint, and the commit is made on the owner's command. Its summary names the phase; its body lists the steps' `Commit:` lines; the ticked `docs/plan.md` travels with it. Phases 2–5 were committed on the local `main`. After Phase 5 the owner had `main` published early (repository, CI, Vercel, ruleset — the work of P8.4–P8.6, done by a separate deploy agent); from Phase 6 on, phases are committed on `dev` and reach `main` through a `dev` → `main` PR that the owner merges (D13).
 Phase gate: a phase starts only after the previous phase's checkpoint has passed and the owner approves. The last step of a phase stops at the checkpoint, which is verified locally: the CI commands in CI order and the production build (`npm run build && npm run preview`).
 Ticks of owner steps and of P2.8 (whose "Done when" is only true after its commit) ride in the next commit; P8.7 is never ticked in the repository. Phase 8 is the exception to one commit per phase: P8.1–P8.3 form its local commit, and P8.4–P8.7 publish.
 A cut phase marks its steps `[-]` (the ticks ride in the next step's commit) and follows the "If this phase is cut" line in its header.
@@ -35,7 +35,7 @@ Phase 2 is the one exception to "one step, one commit": D13 wants a single initi
   - Depends on: P1.7
   - Files: `package.json`, `package-lock.json`, `nuxt.config.ts`, `tsconfig.json`, `app/app.vue`, `public/favicon.svg`, `.nvmrc`, `.gitignore`, `.env.example`
   - Tests: none (no logic yet)
-  - Done when: `typescript` is pinned `~6.0`; `engines.node` is `^22.22.3 || ^24.15.0 || >=26` and `.nvmrc` is `24`; versions match `decisions.md` §2; scripts `dev`, `build`, `preview`, `postinstall: nuxt prepare` exist; `.gitignore` covers `node_modules`, `.nuxt`, `.output`, `.data`, `.env`, `coverage`, `test-results`, `playwright-report`, `blob-report`, `.nitro`, `.cache`, `dist`, `.env.*` (with `!.env.example`), `.DS_Store`, `.vercel`, `*.log`, `.claude/settings.local.json`; a favicon exists and `app.head` declares it (a missing one would later fail the "zero console errors" smoke check); `.env.example` lists `NUXT_SPORTSDB_API_KEY=123` and `NUXT_SPORTSDB_BASE_URL`.
+  - Done when: `typescript` is pinned `~6.0`; `engines.node` is `^22.22.3 || ^24.15.0` (the first plan also had `|| >=26`; dropped after Vercel built on Node 26, see P8.5) and `.nvmrc` is `24`; versions match `decisions.md` §2; scripts `dev`, `build`, `preview`, `postinstall: nuxt prepare` exist; `.gitignore` covers `node_modules`, `.nuxt`, `.output`, `.data`, `.env`, `coverage`, `test-results`, `playwright-report`, `blob-report`, `.nitro`, `.cache`, `dist`, `.env.*` (with `!.env.example`), `.DS_Store`, `.vercel`, `*.log`, `.claude/settings.local.json`; a favicon exists and `app.head` declares it (a missing one would later fail the "zero console errors" smoke check); `.env.example` lists `NUXT_SPORTSDB_API_KEY=123` and `NUXT_SPORTSDB_BASE_URL`.
   - Verify: `npm install` finishes with no peer-dependency errors and without `--legacy-peer-deps`; `npm run build` passes; `npm run dev` serves a page with a placeholder heading.
   - Out of scope: UI kit, state, lint, tests, runtime config values (P3.5).
   - Commit: none — folded into the initial commit proposed in P2.8
@@ -545,7 +545,7 @@ If this phase is cut: mark its steps `[-]`, drop "the footer freshness line is a
 
 If this phase is cut: mark its steps and P7.3 `[-]`, and in P8 adjust `README.md`, `CLAUDE.md`, `decisions.md` (§3.1 third route, §3.2, §3.4, §3.5, D9, D10), `design.md` (league page, its States rows, the "League details" link), `api.md` (third route, `LeagueDetails`) and the `strDescriptionEN` note in `requirements.md`.
 
-- [ ] **P6.1 — League details: adapter, cached function, route**
+- [x] **P6.1 — League details: adapter, cached function, route**
   - Goal: `GET /api/leagues/:id` returning `{ details, seasons }` from two upstream calls in parallel.
   - Depends on: P4.12
   - Files: `shared/types/league.ts`, `server/utils/sportsdb/normalise.ts`, `server/utils/cached.ts`, `server/api/leagues/[id]/index.get.ts`, `tests/fixtures/upstream/details/*.json` (real `lookupleague` captures for all 12 fixture leagues, taken once with pauses), `tests/fixtures/server.mjs`, `tests/unit/server/details.test.ts`, `tests/unit/server/routes.test.ts`
@@ -554,7 +554,7 @@ If this phase is cut: mark its steps and P7.3 `[-]`, and in P8 adjust `README.md
     - the website gains `https://` and is `null` when empty;
     - the logo gets `/small` or is `null`;
     - the description keeps the first paragraph and loses `(… pronunciation: )` fragments, including the variant with trailing text;
-    - `leagues: null` → 404;
+    - `leagues: null` for a listed id → 502, not cached (a 404 for an unlisted id comes from the list check);
     - the route validates the id before any upstream call;
     - seasons come from the same cached function as the seasons route;
     - success sets `s-maxage=86400`; a failure → 502 without a cache header.
@@ -564,7 +564,7 @@ If this phase is cut: mark its steps and P7.3 `[-]`, and in P8 adjust `README.md
   - Commit: `feat(api): add league details route`
   - Requirements: R8, E1
 
-- [ ] **P6.2 — League details store**
+- [x] **P6.2 — League details store**
   - Goal: Client-side data for the league page that reuses the badge cache.
   - Depends on: P6.1
   - Files: `app/stores/leagueDetails.ts`, `app/stores/seasonBadges.ts`, `tests/nuxt/stores/leagueDetails.test.ts`
@@ -572,7 +572,7 @@ If this phase is cut: mark its steps and P7.3 `[-]`, and in P8 adjust `README.md
     - `load(id)` stores the details and seeds the badge cache with the returned seasons;
     - a repeat `load(id)` makes no request;
     - parallel loads share one request;
-    - a 404 is recorded as `notFound`;
+    - a 404 is recorded as `not-found`;
     - other failures are recorded as an error and evicted for retry;
     - opening the same league in the list afterwards makes no seasons request.
   - Done when: state is serialisable; the badge store exposes a small `seed(id, seasons)` action instead of having its state written from outside.
@@ -581,38 +581,40 @@ If this phase is cut: mark its steps and P7.3 `[-]`, and in P8 adjust `README.md
   - Commit: `feat(league-page): add league details store`
   - Requirements: R8, E1
 
-- [ ] **P6.3 — League page, hero, badge grid, SEO, 404**
+- [x] **P6.3 — League page, hero, badge grid, SEO, 404**
   - Goal: The server-rendered `/leagues/[id]` from `design.md`, with a proper not-found page.
   - Depends on: P6.2
   - Files: `app/pages/leagues/[id].vue`, `app/components/LeagueHero.vue`, `app/components/SeasonBadgeGrid.vue`, `app/error.vue`, `tests/e2e/smoke.spec.ts`
   - Tests: smoke gains two cases — `/leagues/<fixture id>` renders the name, description and badge grid with a clean console; `/leagues/999999` and `/leagues/abc` answer HTTP 404 and show "League not found" with the "All leagues" link (the 404 document error is declared as expected in the console guard).
   - Done when:
-    - `await useAsyncData` uses a key that includes the id;
-    - a non-digit id is rejected in the page before any request (`definePageMeta({ validate })`), and an unknown id throws a fatal `createError` 404; both show the 404 page;
+    - the page loads through `await callOnce(\`league-${id}\`, …, { mode: 'navigation' })` (the data lives in the store, as on the list page);
+    - a non-digit id matches no route (`definePageMeta({ path: '/leagues/:id(\\d+)' })`) and an unknown id throws a fatal `createError` 404; both show the 404 page;
     - other failures show an inline alert with "Try again";
     - the hero has the 112 px logo plate, name, chips (sport, country, "Founded …", "Season …") and an external website link with `rel`, a ≥ 44 px target and "(opens in a new tab)" for screen readers;
     - "About" is rendered as text (max 72ch, no `v-html`);
     - the grid is `repeat(auto-fill, minmax(104px, 1fr))` with captions and lazy images with sizes;
     - a league without badges shows the empty note;
     - `useSeoMeta` sets a dynamic title, description and `og:image`;
-    - `error.vue` shows "League not found" for a 404 and a generic message in the same layout for any other status; it wraps itself in `UApp` and the layout (it replaces `app.vue`), and its "All leagues" link calls `clearError({ redirect: '/' })`.
+    - `error.vue` shows "League not found" for a 404 and a generic message in the same layout for any other status; it wraps itself in `UApp` and the layout (it replaces `app.vue`), and its "All leagues" button calls `clearError({ redirect: '/' })`.
   - Verify: build + smoke; view-source shows the description and meta tags; compare with `league-desktop.png` and `league-mobile.png`.
   - Out of scope: links from the list (P6.4).
   - Commit: `feat(league-page): add server-rendered league page`
+  - Notes: `callOnce` instead of `useAsyncData`, as on the list page. Not `definePageMeta({ validate })`: it runs again in the browser while the 404 page hydrates and logs `NUXT_E1005`, which the smoke test's console guard caught; the route param regex (`:id(\\d+)`) gives the same 404 without that (phase review).
   - Requirements: R5, R6, E1
 
-- [ ] **P6.4 — Navigation between the list and the league page**
+- [x] **P6.4 — Navigation between the list and the league page**
   - Goal: The "League details" link in the panel, a back link that restores the list state, and the loading bar.
   - Depends on: P6.3
-  - Files: `app/components/SeasonBadgePanel.vue`, `app/pages/leagues/[id].vue`, `app/app.vue`, `app/utils/navigation.ts`, `tests/unit/app/navigation.test.ts`
-  - Tests: `isListPath(path)` is true for `/` with or without a query string and false for other paths and for `undefined`.
+  - Files: `app/components/SeasonBadgePanel.vue`, `app/components/LeagueDetailsLink.vue`, `app/pages/leagues/[id].vue`, `app/app.vue`
+  - Tests: the panel test asserts one "League details" link in every panel state; the back navigation is checked in the browser here and by e2e in P7.3.
   - Done when: the panel shows "League details" as a `NuxtLink` in all panel states, including "no badges"; "All leagues" calls `router.back()` when the previous history entry is the list (read on the client from the router's history state), otherwise navigates to `/`; `NuxtLoadingIndicator` is mounted; the first visit shows the bar and a repeat visit is instant with no request; the bar does not show on query-only URL writes (filters, accordion; verify); while the league page loads, the list under the bar keeps its filters and open row, and no pending write lands on the league page URL.
   - Verify: `dev:fixtures` — filter, open a league, go to details, back: filters and the open row are restored. Open a league URL directly, then "All leagues" → `/`. Build + smoke.
   - Out of scope: e2e flows (P7.3).
   - Commit: `feat(league-page): link list and league page`
+  - Notes: no `isListPath` util: "All leagues" asks `router.resolve(history.state.back).name === 'index'` (phase review). The panel's link is one `LeagueDetailsLink` component used in both layouts; `icon.clientBundle.scan` ships every template icon, so navigation fetches no icons at runtime.
   - Requirements: R5, R6, E1
 
-**Checkpoint (Phase 6):** commits P6.1–P6.4 on `main`. The CI commands and `npm run test:e2e` pass locally. On the local production build: `/leagues/4328` is server-rendered with logo, chips, description and badges; `/leagues/999999` and `/leagues/abc` are 404 pages; list → details → back restores the filters; the footer freshness line is absent on a directly opened league page.
+**Checkpoint (Phase 6):** one commit for P6.1–P6.4 on `dev`. The CI commands and `npm run test:e2e` pass locally. On the local production build: `/leagues/4328` is server-rendered with logo, chips, description and badges; `/leagues/999999` and `/leagues/abc` are 404 pages; list → details → back restores the filters; the footer freshness line is absent on a directly opened league page.
 
 ---
 
@@ -727,7 +729,7 @@ Always runs; it describes what was actually built. P8.1–P8.3 are local commits
   - Commit: `chore: final review fixes and docs sync`
   - Requirements: R5, R11, R12, E1
 
-- [ ] **P8.4 — First push and CI (owner)**
+- [x] **P8.4 — First push and CI (owner)**
   - Goal: The local history reaches a public repository and CI runs on it for the first time.
   - Depends on: P8.3
   - Files: none (git only)
@@ -736,20 +738,22 @@ Always runs; it describes what was actually built. P8.1–P8.3 are local commits
   - Verify: the Actions tab shows both jobs green on the last commit of `main`.
   - Out of scope: hosting (P8.5), the ruleset (P8.6).
   - Commit: none (a fix commit only if CI is red)
+  - Notes: done early, right after Phase 5, by a deploy agent on the owner's request: https://github.com/exibet/sports-league, both CI jobs green on the first run.
   - Requirements: R10, R11
 
-- [ ] **P8.5 — Connect Vercel and add the live link (owner)**
+- [~] **P8.5 — Connect Vercel and add the live link (owner)**
   - Goal: Production deploys from `main`, and the README links to it.
   - Depends on: P8.4
   - Files: `README.md` (the live link)
   - Tests: none
   - Done when: the owner imported the repository with the Nuxt preset auto-detected; Node 24.x is selected (the build log shows the version actually used, since `engines.node` can override the dashboard; if it is not 24.x, align the dashboard setting and record it in `decisions.md` §2); no env vars are needed (the key defaults to the free one; set `NUXT_SPORTSDB_API_KEY` only if a paid key is used); the production URL serves the app; the README's live link is committed and pushed on the owner's command (before P8.6 makes `main` PR-only); on production, success responses of `/api/**` carry `Cache-Control`.
-  - Verify: open the production URL; `curl -sI <production-url>/api/leagues` shows `Cache-Control`.
+  - Verify: open the production URL; a repeat `curl -sI <production-url>/api/leagues` shows `x-vercel-cache: HIT` (Vercel strips `s-maxage` from the response it serves).
   - Out of scope: the warm-up and the final checks (P8.7).
   - Commit: `docs(readme): add live link`
+  - Notes: done early (after Phase 5) except the README link: Vercel project `sports-league`, Git integration, production from `main` at https://sports-league-sooty.vercel.app (the plain name was taken). The ruleset came first, so the README link goes through a `dev` → `main` PR. Vercel's CDN consumes `s-maxage`/`stale-while-revalidate` and strips them from the response, so the check is a repeat request with `x-vercel-cache: HIT`, not the header. The first build used Node 26.x because `engines.node` ended with `>=26`; the range now stops at 24, so the next production build (the first `dev` → `main` merge) uses the project's 24.x.
   - Requirements: R8, R11
 
-- [ ] **P8.6 — Enable the `main` ruleset (owner, GitHub settings)**
+- [x] **P8.6 — Enable the `main` ruleset (owner, GitHub settings)**
   - Goal: Protect `main` as D13 describes, now that the required checks have run and can be selected.
   - Depends on: P8.5
   - Files: none
@@ -758,6 +762,7 @@ Always runs; it describes what was actually built. P8.1–P8.3 are local commits
   - Verify: a direct `git push` to `main` of an empty test commit is rejected (then dropped locally).
   - Out of scope: any code change.
   - Commit: none
+  - Notes: done early with P8.4 (ruleset `main`, active): `E2E` runs but is not required yet; GitHub also added its default extra-approval setting for unattributed changes, which does nothing with 0 required approvals.
   - Requirements: R10
 
 - [ ] **P8.7 — Release (owner)**

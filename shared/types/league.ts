@@ -21,3 +21,25 @@ export interface SeasonBadge {
   season: string
   badgeUrl: string
 }
+
+/** One league in detail, for the league page. */
+export interface LeagueDetails {
+  id: string
+  name: string
+  sport: string
+  country: string
+  formedYear: string
+  currentSeason: string
+  /** With a scheme; `null` when upstream has none. */
+  website: string | null
+  /** The current logo (`/small`), unlike the archive season badges. */
+  logoUrl: string | null
+  /** The first paragraph, as plain text. */
+  description: string
+}
+
+/** `GET /api/leagues/:id`. */
+export interface LeagueDetailsResponse {
+  details: LeagueDetails
+  seasons: SeasonBadge[]
+}

@@ -1,6 +1,6 @@
 // The only place upstream field names (`idLeague`, `strBadge`, …) appear. Payloads arrive as
 // `unknown` from the client; every field is checked before it is used.
-import type { League, SeasonBadge } from '#shared/types/league'
+import type { League, LeagueDetails, SeasonBadge } from '#shared/types/league'
 import { UpstreamError } from './errors'
 
 const SMALL_SUFFIX = '/small'
@@ -59,4 +59,49 @@ export function normaliseSeasons(payload: unknown): SeasonBadge[] {
     }
     return [{ season: strSeason, badgeUrl: smallImage(strBadge) }]
   })
+}
+
+const text = (value: unknown): string => typeof value === 'string' ? value.trim() : ''
+
+/** `www.example.com` → `https://www.example.com`; empty or not a URL → `null`. */
+function website(value: unknown): string | null {
+  const url = text(value)
+  const withScheme = /^https?:\/\//i.test(url) ? url : `https://${url}`
+  return url && URL.canParse(withScheme) ? withScheme : null
+}
+
+// Upstream stripped the IPA from descriptions and left fragments such as `(Italian pronunciation: )`
+// or `(Dutch pronunciation: ; "Honour Division")`. Drop the fragment, then any parentheses left empty.
+// Only a fragment right after the opening parenthesis is dropped; other text there is kept.
+const PRONUNCIATION = /\([\p{L} ]*pronunciation:\s*[;,]?\s*/gu
+const EMPTY_PARENTHESES = /\s*\(\s*\)/g
+
+/** The first paragraph of an upstream description, without the leftover pronunciation fragments. */
+export function cleanDescription(value: unknown): string {
+  const [firstParagraph = ''] = text(value).split(/\r?\n\s*\r?\n/)
+  return firstParagraph.replace(PRONUNCIATION, '(').replace(EMPTY_PARENTHESES, '').trim()
+}
+
+/**
+ * `lookupleague.php` → `LeagueDetails`. The route asks only for ids from the league list, so a
+ * payload without that league (`leagues: null`, no name) is an upstream failure: never cached,
+ * retried by the next request, rather than a 404 kept for a day.
+ */
+export function normaliseDetails(payload: unknown): LeagueDetails {
+  const [league] = isRecord(payload) && Array.isArray(payload.leagues) ? payload.leagues : []
+  if (!isRecord(league) || typeof league.idLeague !== 'string' || !text(league.strLeague)) {
+    throw new UpstreamError('invalid-response', 'lookupleague.php')
+  }
+  const logo = text(league.strBadge)
+  return {
+    id: league.idLeague,
+    name: text(league.strLeague),
+    sport: text(league.strSport),
+    country: text(league.strCountry),
+    formedYear: text(league.intFormedYear),
+    currentSeason: text(league.strCurrentSeason),
+    website: website(league.strWebsite),
+    logoUrl: logo ? smallImage(logo) : null,
+    description: cleanDescription(league.strDescriptionEN),
+  }
 }
