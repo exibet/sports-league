@@ -191,6 +191,9 @@ describe('GET /api/leagues/:id', () => {
   })
 })
 
+// The memoising stub stands in for Nitro's cache, which never stores a thrown error (nitropack's
+// `runtime/internal/cache.mjs`). These tests prove what our routes do with it: a failure is thrown
+// rather than returned as a value, so the next request reaches upstream again.
 describe('API routes behind a cache that never stores errors', () => {
   beforeEach(() => setup(true))
 

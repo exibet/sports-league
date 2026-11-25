@@ -21,15 +21,17 @@ const LEAGUE_PAGE: LeagueDetailsResponse = {
   seasons: [],
 }
 
-/** Serves `url`: the first request fails with a 502, the next ones get `data`. Removed after the test. */
+/** Serves `url`: the first request fails with a 502, the next ones get `data` (until the test ends). */
 function failOnce(url: string, data: unknown) {
-  let failed = false
-  onTestFinished(registerEndpoint(url, defineEventHandler((event) => {
-    if (failed) return data
-    failed = true
-    setResponseStatus(event, 502)
-    return { statusCode: 502, message: MESSAGE }
-  })))
+  onTestFinished(registerEndpoint(url, () => data))
+  // Registered last, so it answers first; `once` removes it after that first request.
+  registerEndpoint(url, {
+    once: true,
+    handler: defineEventHandler((event) => {
+      setResponseStatus(event, 502)
+      return { statusCode: 502, message: MESSAGE }
+    }),
+  })
 }
 
 describe('a failed load shows the error, and "Try again" loads the data', () => {

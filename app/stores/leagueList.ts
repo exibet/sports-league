@@ -5,10 +5,8 @@ import { matchesQuery } from '~/utils/search'
 
 type QueryPatch = Record<string, string | undefined>
 
-const LIST_PATH = '/'
-
 function isListRoute(route: RouteLocationNormalizedLoaded): boolean {
-  return route.path === LIST_PATH
+  return route.name === 'index'
 }
 
 /**
@@ -46,10 +44,10 @@ export const useLeagueListStore = defineStore('leagueList', () => {
 
   const filtered = computed(() => leagues.leagues.filter(league => isShown(league, query.value, sport.value)))
 
-  /** The expanded league: only an id that is in the filtered list, otherwise `null`. */
+  /** The expanded league: only an id that is in the filtered list. */
   const openId = computed(() => {
     const id = queryValue(listQuery.value.open)
-    return filtered.value.find(league => league.id === id)?.id ?? null
+    return filtered.value.find(league => league.id === id)?.id
   })
 
   /** `?season=` as written; the open row's panel falls back to the first season it has. */

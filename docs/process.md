@@ -89,7 +89,7 @@ changes.
 | 5 | Header with theme toggle, footer with data freshness, keyboard, focus and touch-target pass, responsive pass | `5271553` |
 | 6 | League page `/leagues/:id`, rendered on the server and linked from the list | `fd3afd6` (PR #1) |
 | 7 | E2E suite for filters, badges, caching and the league page; the README screenshot | `485e675` (PR #2) |
-| 8 | README, cache warm-up script, a final review of the whole repository, CI split into one job per concern, this page | the Phase 8 PR |
+| 8 | README, cache warm-up script, a final review of the whole repository, CI split into one job per concern, this page | `37bc2c2` (PR #3) |
 
 A phase ran like this. Its steps piled up in the working tree, each one tests first, then the code,
 then lint, typecheck and unit tests (from Phase 4 on, also the production build and the smoke test)
@@ -137,6 +137,11 @@ These changed the code, so they are worth knowing about.
   league's seasons failed during SSR (a shared `?open=` link), the badge panel asked again right
   after hydration: two upstream calls within a second, under a rate limit. Now only "Try again"
   retries, and a component test pins it.
+- **`Object.groupBy` in the browser.** A last review after the release noticed that the sport
+  counts, computed again during hydration, used `Object.groupBy`, which Safari before 17.4 does
+  not have: on an older iPhone the list page would have failed. It is a `reduce` now, and
+  `CLAUDE.md` keeps browser code to what Safari 16 supports. The same review added an `h1` to the
+  error page, the route announcer for screen readers and one title template for every page.
 - **A test that passed without the behaviour.** The e2e test "while the league page loads, the list
   keeps its state" passed even when the list did not keep it. It now holds the details request and
   checks the page while the request is pending.
@@ -186,7 +191,7 @@ The jobs and their commands are in the [README](../README.md#cicd).
   - a reload with `?q=&open=&season=` brings back the same screen;
   - the console is clean;
   - there is no horizontal scroll at 390 px.
-- **Tests:** 260 Vitest tests (173 for the server layer and the utilities, 87 for the stores,
+- **Tests:** 261 Vitest tests (173 for the server layer and the utilities, 88 for the stores,
   components and pages) and 32 Playwright tests, all on fixtures. The coverage thresholds are 70% for lines
   and functions and 65% for branches.
 - **The README:** followed in a fresh clone (`npm ci`, `build`, `test:run`, `dev`).

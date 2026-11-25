@@ -56,6 +56,7 @@ Once per machine: `npx playwright install chromium`.
   what the types already guarantee. It must not break, but one check is enough.
 - **Declarative collections.** `map`, `filter`, `flatMap`, `reduce`, `some`, `find`,
   `Object.fromEntries` over `for`/`while`; a loop only in the rare case nothing else reads better.
+  Code that runs in the browser avoids APIs newer than Safari 16 (no `Object.groupBy`: use `reduce`).
 - **VueUse first.** Before writing a Vue/Nuxt helper yourself (debounce, timers, listeners,
   storage, media queries, …), look it up in VueUse (`@vueuse/core`, auto-imported through
   `@vueuse/nuxt`). No hand-written `setTimeout` debounce.

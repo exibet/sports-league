@@ -16,8 +16,13 @@ export const GENERIC_SPORT_ICON = 'tabler:trophy'
 
 /** The sports present in the data, alphabetical, each with its number of leagues. */
 export function toSportOptions(leagues: readonly League[]): SportOption[] {
-  return Object.entries(Object.groupBy(leagues, league => league.sport))
-    .map(([sport, group = []]) => ({ sport, count: group.length }))
+  // Not `Object.groupBy`: this also runs in the browser (hydration), and Safari before 17.4 lacks it.
+  const counts = leagues.reduce<Record<string, number>>(
+    (count, { sport }) => ({ ...count, [sport]: (count[sport] ?? 0) + 1 }),
+    {},
+  )
+  return Object.entries(counts)
+    .map(([sport, count]) => ({ sport, count }))
     .sort((a, b) => a.sport.localeCompare(b.sport, 'en'))
 }
 

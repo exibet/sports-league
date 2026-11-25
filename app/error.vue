@@ -18,7 +18,7 @@ const COPY = {
 }
 const copy = computed(() => props.error.statusCode === 404 ? COPY.notFound : COPY.failed)
 
-useSeoMeta({ title: () => `${copy.value.title} · Sports Leagues` })
+useSeoMeta({ title: () => copy.value.title })
 </script>
 
 <template>
@@ -26,6 +26,7 @@ useSeoMeta({ title: () => `${copy.value.title} · Sports Leagues` })
     <NuxtLayout>
       <UEmpty
         v-bind="copy"
+        :as="{ title: 'h1' }"
         variant="naked"
         class="border border-dashed border-default"
         :actions="[{

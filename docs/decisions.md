@@ -149,8 +149,11 @@ server in tests and `dev:fixtures`).
 - Domain components (starting point for the plan): `AppHeader`, `AppFooter`, `LeagueFilters`,
   `LeagueList`, `LeagueRow` (accordion row), `SeasonBadgePanel`, `SeasonPicker`, `LeagueHero`,
   `SeasonBadgeGrid`, plus loading and empty states and a shared `RetryAlert` for errors.
-- Nuxt UI inside: `UHeader`, `UContainer`, `UInput`, `USelect`, `UButton`, `UBadge`,
-  `USkeleton`, `UAlert`, `UEmpty`, `UColorModeButton`; VueUse for debounce, time-ago and scrolling.
+- Nuxt UI inside: `UApp`, `UHeader`, `UContainer`, `UInput`, `USelect`, `UButton`, `ULink`,
+  `UIcon`, `UBadge`, `USkeleton`, `UAlert`, `UEmpty`, `UColorModeButton`; VueUse for debounce,
+  time-ago and scrolling.
+- Page titles: each page sets only its own part (`useSeoMeta`); `app.head.titleTemplate` in
+  `nuxt.config.ts` adds " · Sports Leagues".
 - `LeagueRow` is a hand-written accordion row, not `UAccordion`: `UAccordion` renders its header
   as a `div`, which would lose the `h2` around the row button that `design.md` requires. The season
   picker uses native radios rather than `URadioGroup`, whose variants do not give the filled

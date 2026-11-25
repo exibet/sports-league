@@ -33,7 +33,7 @@ function backToList(event: MouseEvent) {
 }
 
 useSeoMeta({
-  title: () => `${league.value?.name ?? 'League'} · Sports Leagues`,
+  title: () => league.value?.name ?? 'League',
   description: () => league.value?.description.slice(0, 160),
   ogImage: () => league.value?.logoUrl,
 })

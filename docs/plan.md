@@ -385,7 +385,7 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Verify: `npm run dev:fixtures` — type, pick a sport, reload: the screen is reproduced from the URL and Back leaves the page. Then build + smoke.
   - Out of scope: highlight and empty state (P4.8).
   - Commit: `feat(leagues): add search and sport filter controls`
-  - Notes: changed after the phase checkpoint by the owner: the sport select is always shown (disabled with a note for one sport) instead of hidden; the browser's own clear button of `type="search"` is hidden, so only our "Clear search" button shows.
+  - Notes: changed after the phase checkpoint by the owner: the sport select is always shown (disabled with a note for one sport) instead of hidden; the input is `type="text"` with `inputmode="search"`, so the browser adds no clear button of its own and only our "Clear search" button shows.
   - Requirements: R3, R4, R5, R6
 
 - [x] **P4.8 — Match highlight and list states**
@@ -734,7 +734,7 @@ Always runs; it describes what was actually built. P8.1–P8.3 are local commits
   - Verify: lint, typecheck, `test:coverage`, build, `test:e2e` all green locally (CI runs from P8.4).
   - Out of scope: new features; refactors not tied to a finding.
   - Commit: `chore: final review fixes and docs sync`
-  - Notes: the independent reviewer found one bug: after a failed server render the badge panel retried on mount, although "Try again" is the only retry (fixed, with a regression test). Also from the review: a test for the error state and "Try again" on the list and league pages; `RetryAlert` and `SeasonBadgesEmpty` replace three and two copies (`LeagueListError` is gone); the error page's copy is a lookup; e2e uses `waitForHydration` from `@nuxt/test-utils/e2e`; dead exports dropped; drift fixed (`E2E` not required, footer column order, the review skill, native radios). On the owner's request CI was split into one job per concern (Lint, Typecheck, Unit tests, Audit, Build, E2E on the build artifact) behind a gate job that keeps the required check's name (`decisions.md` §5).
+  - Notes: the independent reviewer found one bug: after a failed server render the badge panel retried on mount, although "Try again" is the only retry (fixed, with a regression test). Also from the review: a test for the error state and "Try again" on the list and league pages; `RetryAlert` and `SeasonBadgesEmpty` replace three and two copies (`LeagueListError` is gone); the error page's copy is a lookup; e2e uses `waitForHydration` from `@nuxt/test-utils/e2e`; dead exports dropped; drift fixed (`E2E` not required, footer column order, the review skill, native radios). On the owner's request CI was split into one job per concern (Lint, Typecheck, Unit tests, Audit, Build, E2E on the build artifact) behind a gate job that keeps the required check's name (`decisions.md` §5). After the release a second full review (Fable, on the owner's request) found no blocker; from it: `Object.groupBy` replaced in browser code (Safari before 17.4), `titleTemplate`, an `h1` on the error page and plain-text empty-state titles, `NuxtRouteAnnouncer`, `undefined` as the one "absent" value in stores, the list route checked by name, `public/robots.txt`, a positive control in the league details store test, and small docs fixes.
   - Requirements: R5, R11, R12, E1
 
 - [x] **P8.4 — First push and CI (owner)**
