@@ -21,6 +21,7 @@ E1), API facts in `api.md`, the visual spec in `design.md`, the implementation p
 | Framework | Nuxt 4 (universal rendering) | 4.7 |
 | UI kit | Nuxt UI (Reka UI + Tailwind CSS 4) | 4.13 |
 | State | Pinia via `@pinia/nuxt` | 1.0 / pinia 4.1 |
+| Composables | VueUse via `@vueuse/nuxt` (debounce, timers, listeners before writing our own) | 15.1 |
 | Language | TypeScript, strict, **pinned `~6.0`** | 6.0 |
 | Unit tests | Vitest + `@nuxt/test-utils` (projects `node` and `nuxt`) | 5.1 / 4.4 |
 | E2E | Playwright, one project | — |
@@ -92,12 +93,20 @@ server in tests and `dev:fixtures`).
    Vercel CDN. Server-rendered requests call `/api` in-process and bypass the CDN; the CDN helps
    client-side fetches.
 3. **Client.**
-   - Pages load data with `await useAsyncData(key, () => store.load…())` (non-lazy), so SSR waits
-     for it and the browser reuses the payload instead of refetching.
+   - The list page loads the leagues with `await callOnce('leagues', () => store.load(),
+     { mode: 'navigation' })`: SSR waits, the browser reuses the Pinia payload instead of
+     refetching, and coming back to the page runs it again (a no-op once loaded, a retry after a
+     failure). The data lives in the store, so `useAsyncData` (whose result we would not use) is
+     not needed.
+   - The badge panel owns its data: `onServerPrefetch` loads it during SSR (a `?open=` URL renders
+     complete) and `onMounted` on the client (an open, or a hand-made URL). Both go through the
+     badge store, so a cached or in-flight entry makes no new request.
    - The badge cache lives in Pinia as a plain `Record<id, entry>`; in-flight promises sit in a
      `Map` inside the store's setup closure (not module scope, which would leak across SSR
      requests; not returned state, which must serialise). A repeat open makes no request, two
      parallel opens share one promise, a failure is evicted so "Try again" really retries.
+   - Store requests to `/api` use `retry: 0`: ofetch repeats a failed GET once by default, which
+     on a rate limit doubles the pressure. Retrying is the user's explicit "Try again".
    - The league page reuses the same cached seasons.
 
 ### 3.3 State (E1) — URL as storage, Pinia as interface
@@ -142,8 +151,8 @@ server in tests and `dev:fixtures`).
 
 - **Search:** case-, whitespace- and diacritics-insensitive (per-character fold), debounced, the
   matched fragment highlighted.
-- **Sport dropdown:** options derived from the data, sorted, each with a league count; hidden when
-  there is only one sport (R4).
+- **Sport dropdown:** options derived from the data, sorted, each with a league count; always
+  shown, and disabled with a note when there is only one sport (R4; owner decision).
 - **Result count** with `aria-live`, "Reset filters" when any filter is active, an empty state that
   names the query.
 - **Accordion:** one league open at a time; first open shows a skeleton, repeat open is instant.
@@ -225,7 +234,7 @@ Published on purpose (the brief invites AI use and asks to describe it):
 
 | ID | Question | Decision |
 |---|---|---|
-| D1 | Showing the sport dropdown when live data has one sport | Unit + e2e on mixed fixtures; README screenshot; `npm run dev:fixtures`; no demo data in production |
+| D1 | Showing the sport dropdown when live data has one sport | Always visible, disabled with a note on one sport; unit + e2e on mixed fixtures; README screenshot; `npm run dev:fixtures`; no demo data in production |
 | D2 | E2E data source | Fixture server via `NUXT_SPORTSDB_BASE_URL`, against the production build |
 | D3 | Theme | Dark by default, toggle, default storage; client-only toggle icon |
 | D4 | Where list state lives | URL (`q`, `sport`, `open`, `season`) as storage, Pinia as interface and data cache; store reads `useRouter().currentRoute` |

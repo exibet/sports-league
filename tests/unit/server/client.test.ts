@@ -102,32 +102,26 @@ describe('fetchUpstream', () => {
     expect(error.code).toBe('unreachable')
   })
 
-  it('attempts the request exactly once, even on 429 and 5xx', async () => {
-    for (const status of [429, 500, 503]) {
-      const fetch = respond('{}', { status })
+  it.each([429, 500, 503])('attempts the request exactly once on HTTP %i', async (status) => {
+    const fetch = respond('{}', { status })
 
-      await failure(fetchUpstream(client(fetch), 'all_leagues.php'))
+    await failure(fetchUpstream(client(fetch), 'all_leagues.php'))
 
-      expect(fetch).toHaveBeenCalledTimes(1)
-    }
+    expect(fetch).toHaveBeenCalledTimes(1)
   })
 
-  it('never exposes the API key or the upstream URL in the error', async () => {
-    const fetches: FetchImpl[] = [
-      respond(RATE_LIMITED, { status: 429 }),
-      respond('<html>', { status: 200 }),
-      respond('{}', { status: 500 }),
-      vi.fn<FetchImpl>(async () => {
-        throw new TypeError(`fetch failed for ${BASE_URL}/${API_KEY}/all_leagues.php`)
-      }),
-    ]
+  it.each([
+    ['a rate limit', () => respond(RATE_LIMITED, { status: 429 })],
+    ['an HTML body', () => respond('<html>', { status: 200 })],
+    ['a server error', () => respond('{}', { status: 500 })],
+    ['a network error naming the URL', () => vi.fn<FetchImpl>(async () => {
+      throw new TypeError(`fetch failed for ${BASE_URL}/${API_KEY}/all_leagues.php`)
+    })],
+  ])('never exposes the API key or the upstream URL (%s)', async (_case, makeFetch) => {
+    const error = await failure(fetchUpstream(client(makeFetch()), 'all_leagues.php'))
+    const exposed = [error.message, String(error), JSON.stringify(error), String(error.cause ?? '')].join(' ')
 
-    for (const fetch of fetches) {
-      const error = await failure(fetchUpstream(client(fetch), 'all_leagues.php'))
-      const exposed = [error.message, String(error), JSON.stringify(error), String(error.cause ?? '')].join(' ')
-
-      expect(exposed).not.toContain(API_KEY)
-      expect(exposed).not.toContain('upstream.test')
-    }
+    expect(exposed).not.toContain(API_KEY)
+    expect(exposed).not.toContain('upstream.test')
   })
 })

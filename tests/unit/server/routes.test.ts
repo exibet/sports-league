@@ -111,12 +111,12 @@ describe('API routes', () => {
   it('a leagues failure during id validation is a 502, never a 404', async () => {
     await failUpstream('all_leagues.php')
 
-    for (const path of ['/api/leagues', '/api/leagues/4328/seasons']) {
-      const response = await get(path)
+    const responses = await Promise.all(['/api/leagues', '/api/leagues/4328/seasons'].map(get))
 
+    responses.forEach((response) => {
       expect(response.status).toBe(502)
       expect(response.headers.get('cache-control')).toBeNull()
-    }
+    })
   })
 
   it('declares both cached functions with a name, swr and the documented maxAge', () => {

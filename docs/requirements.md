@@ -80,7 +80,7 @@ Additional context from the candidate: the hiring company is moving to Nuxt.
 | R1 | Fetch and display the list of leagues | Assignment |
 | R2 | Show `strLeague` and `strSport` for each league | Assignment |
 | R3 | Search bar filters leagues by name | Assignment |
-| R4 | Sport dropdown, shown when the response has more than one sport | Assignment |
+| R4 | Sport dropdown that filters when the response has more than one sport | Assignment |
 | R5 | Component-based architecture | Assignment |
 | R6 | Responsive and functional first, visual polish second | Assignment |
 | R7 | Clicking a league calls the Season Badge API with its ID and shows a season badge (any season, or the first one) | Assignment |
@@ -103,9 +103,10 @@ Additional context from the candidate: the hiring company is moving to Nuxt.
   SPA. This is a deliberate choice (SEO for league pages, server cache, hidden API key), recorded
   in `decisions.md`. A strict client-only build would mean `ssr: false` plus moving the upstream
   calls out of the server layer; not planned.
-- **"if multiple sport types appear" (R4).** The free key returns 10 leagues, all Soccer, so the
-  dropdown is hidden on live data. The logic is proven by unit and e2e tests on fixtures with
-  several sports; the README opens with a screenshot of the dropdown and the command
+- **"if multiple sport types appear" (R4).** The free key returns 10 leagues, all Soccer. The
+  dropdown is always shown, filled from the data, so the control is discoverable; with one sport
+  it is disabled with a note ("Only Soccer leagues in the data"), since there is nothing to
+  filter. The filtering is proven by unit and e2e tests on fixtures with several sports; the README opens with a screenshot of the dropdown and the command
   `npm run dev:fixtures`, which runs the app on mixed-sport fixtures (`decisions.md`, D1).
 - **"any season or the first entity" (R7).** We show the first season with a badge by default and
   let the user switch seasons.

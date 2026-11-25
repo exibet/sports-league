@@ -58,8 +58,9 @@ component hardcodes a color; everything goes through the tokens below.
   as a radio group; below a 340 px container the labels drop to 12 px. > 5 →
   `[‹] [Season 2016/17 ▾] [›]`.
 - **Images:** badges and logos use the `/small` variant with explicit width and height.
-- **Icons:** Iconify collections installed locally (UI icons from lucide; sport icons — soccer
-  ball, basketball, motorsport flag — from a collection that has them).
+- **Icons:** Iconify collections installed locally: UI icons from lucide; sport icons from tabler
+  (`ball-football`, `ball-basketball`, `flag`, `trophy` for any other sport), which matches
+  lucide's outline style.
 - **League page:** "‹ All leagues" → hero (112 px logo plate, name `clamp(22px, 5vw, 30px)`,
   chips: sport, country, "Founded 1992", "Season 2026/27"; website link) → "About" (max 72ch) →
   "Season badges" grid `repeat(auto-fill, minmax(104px, 1fr))` with season captions.
@@ -86,8 +87,9 @@ component hardcodes a color; everything goes through the tokens below.
 - Touch targets ≥ 44 px (inputs, segments, icon buttons, links in rows and the footer).
 - League row header is a `<button aria-expanded aria-controls>` inside an `h2`; the panel is a
   `role="region"` with a label.
-- Season picker is a radio group (native radios or `URadioGroup`): one tab stop, arrow keys move
-  the selection. Not tabs — there are no tab panels.
+- Season picker is a radio group (native radios sharing a name inside `role="radiogroup"`
+  labelled "Season"): one tab stop, arrow keys move the selection. Not tabs — there are no tab
+  panels.
 - Count is `aria-live="polite"`; icon-only buttons have `aria-label`; decorative icons are
   `aria-hidden`; external links say "(opens in a new tab)" for screen readers.
 - Text contrast ≥ 4.5:1 in both themes (see token notes).

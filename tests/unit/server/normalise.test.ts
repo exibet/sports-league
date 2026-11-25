@@ -105,10 +105,10 @@ describe('normaliseSeasons', () => {
   })
 
   it.each(SEASON_FILES)('normalises fixture %s into well-formed badges', (file) => {
-    for (const badge of normaliseSeasons(readJsonFixture(`seasons/${file}`))) {
+    normaliseSeasons(readJsonFixture(`seasons/${file}`)).forEach((badge) => {
       expect(badge.season).toMatch(/^\d{4}(-\d{4})?$/)
       expect(badge.badgeUrl).toMatch(/\.png\/small$/)
-    }
+    })
   })
 })
 

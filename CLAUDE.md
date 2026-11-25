@@ -24,10 +24,11 @@ npm run build          # production build ;  preview — serve it
 npm run lint           # eslint --fix ;  lint:check — no fix (CI)
 npm run typecheck      # nuxt typecheck (app, server, tests, configs)
 npm run test           # vitest watch ;  test:run — once ;  test:coverage — node project + coverage
+npm run test:smoke     # playwright smoke spec ;  test:e2e — all specs (both need `npm run build` first)
 ```
 
-Planned: `test:smoke` and `test:e2e` (Playwright against an existing production build and the
-fixture server, added in P4.5).
+Playwright runs the existing production build against the fixture server on ports 3920/3921.
+Once per machine: `npx playwright install chromium`.
 
 ## Architecture in one screen
 
@@ -40,18 +41,28 @@ fixture server, added in P4.5).
 - `app/stores/` — Pinia. The URL (`q`, `sport`, `open`, `season`) is the storage for list state;
   stores read `useRouter().currentRoute` and write with `router.replace`. Stores also hold the
   league list (with `fetchedAt`) and the per-league badge cache.
-- `app/pages/` — `/` and `/leagues/[id]`. Pages load data with `await useAsyncData(...)` calling
-  store actions, so SSR waits for it and the client reuses the payload.
+- `app/pages/` — `/` and `/leagues/[id]`. Pages load store data with `await callOnce(key, () =>
+  store.load(), { mode: 'navigation' })`, so SSR waits for it and the client reuses the payload;
+  a component that owns its data (the badge panel) loads it in `onServerPrefetch` + `onMounted`.
 - `app/components/` — domain components; Nuxt UI primitives inside them.
 
 ## Code rules
 
+- **Readable first.** Code is written for people: simple, obvious to anyone, short functions.
+  Validate once, at the trust boundary (upstream JSON, URL params); inside, trust the types. No
+  repeated or no-op guards ("if it is undefined/empty/null, return it"), no defensive checks of
+  what the types already guarantee. It must not break, but one check is enough.
+- **Declarative collections.** `map`, `filter`, `flatMap`, `reduce`, `some`, `find`,
+  `Object.fromEntries` over `for`/`while`; a loop only in the rare case nothing else reads better.
+- **VueUse first.** Before writing a Vue/Nuxt helper yourself (debounce, timers, listeners,
+  storage, media queries, …), look it up in VueUse (`@vueuse/core`, auto-imported through
+  `@vueuse/nuxt`). No hand-written `setTimeout` debounce.
 - **TypeScript strict**, pinned `~6.0` (TS 7 breaks `@typescript-eslint`). No `any`. `as` only at
   the upstream JSON trust boundary, with a comment saying why.
 - **Upstream field names** (`strLeague`, `idLeague`, …) appear only in the server adapter and its
   tests. Everything else uses `shared/types`.
-- **Data access:** components never call `$fetch`/`useFetch`; pages call store actions through
-  `useAsyncData`; stores call our `/api`.
+- **Data access:** components never call `$fetch`/`useFetch`; pages and components call store
+  actions (pages through `callOnce`); stores call our `/api`.
 - **Stores:** never `useRoute()` inside a store; never `router.replace` during store setup or SSR;
   invalid query params are sanitised by derivation (getters fall back), never by rewriting the URL
   on load. In-flight promises live in a `Map` inside the setup closure, never in module scope or in

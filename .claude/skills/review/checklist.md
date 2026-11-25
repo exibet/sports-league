@@ -7,7 +7,7 @@ Walk every group; report only real violations in the diff.
 - Upstream field names (`strLeague`, `idLeague`, `strBadge`, …) outside the server adapter and its
   tests. 🔴
 - A component calling `$fetch`/`useFetch`, or anything building upstream URLs outside the server
-  adapter. 🔴 (Pages calling store actions through `useAsyncData` is the intended pattern.)
+  adapter. 🔴 (Pages and components calling store actions is the intended pattern.)
 - The API key or upstream base URL reachable from client code (public runtime config, a client
   import of server utils). 🔴
 - `any`, or an `as` cast that is not at the upstream trust boundary with a comment.
@@ -46,8 +46,8 @@ Walk every group; report only real violations in the diff.
   or `s-maxage` (CDN) on success.
 - Client badge cache: a repeat open firing a request, two parallel opens firing two requests, a
   failure left cached so "Try again" cannot retry.
-- Data fetched in a `watch` or `onMounted` that SSR should have awaited through `useAsyncData`; the
-  list refetched on the client after SSR.
+- Data fetched in a `watch` or only in `onMounted` that SSR should have awaited (`callOnce`,
+  `onServerPrefetch` or `useAsyncData`); the list refetched on the client after SSR.
 
 ## D. Server adapter and errors
 
@@ -71,13 +71,19 @@ Walk every group; report only real violations in the diff.
 ## F. Product logic
 
 - Search not case-, whitespace- and diacritics-insensitive; highlight misaligned with the match.
-- Sport dropdown shown with a single sport, or options hardcoded instead of derived.
+- Sport dropdown hidden, or enabled with a single sport (it is always shown, disabled with a note
+  then), or options hardcoded instead of derived.
 - Empty, loading and error states missing or not matching `docs/design.md`.
 - `SeasonPicker` not switching modes above 5 seasons; "no badges" not handled.
 - More than one accordion row open at a time.
 
 ## G. SOLID / DRY / KISS and simplification
 
+- Code that reads like a machine wrote it: repeated or no-op guards ("if undefined, return it"),
+  defensive checks of what the types already guarantee, validation repeated past the trust
+  boundary. One check at the boundary is enough.
+- A `for`/`while` loop where `map`/`filter`/`flatMap`/`reduce`/`find`/`some` reads better.
+- A hand-written helper (debounce, timer, listener, storage, media query) that VueUse already has.
 - A component that fetches, transforms and renders — move data access to a store/composable.
 - A `ref` mirrored by a `watch` where a `computed` works; derivable state stored.
 - An abstraction with one caller, a wrapper that only forwards, an option nobody passes.

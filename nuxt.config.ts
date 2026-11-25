@@ -1,6 +1,8 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import { GENERIC_SPORT_ICON, SPORT_ICONS } from './app/utils/sports'
+
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', '@nuxt/ui', '@pinia/nuxt'],
+  modules: ['@nuxt/eslint', '@nuxt/ui', '@pinia/nuxt', '@vueuse/nuxt'],
   app: {
     head: {
       htmlAttrs: { lang: 'en' },
@@ -71,5 +73,10 @@ export default defineNuxtConfig({
     // Icons come only from the locally installed collections; never from the Iconify API.
     serverBundle: { collections: ['lucide', 'tabler'] },
     fallbackToApi: false,
+    // The sport icons are chosen at runtime from `app/utils/sports.ts`, which the bundle scan of
+    // templates does not see; listing them makes them available without a server round trip.
+    clientBundle: {
+      icons: [...Object.values(SPORT_ICONS), GENERIC_SPORT_ICON],
+    },
   },
 })

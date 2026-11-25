@@ -36,9 +36,7 @@ describe('mapUpstreamError', () => {
     expect(mapUpstreamError(bug)).toBe(bug)
   })
 
-  it('never exposes the API key, the upstream host or the endpoint', () => {
-    for (const code of CODES) {
-      expect(JSON.stringify(mapped(code).toJSON())).not.toMatch(/thesportsdb\.com|\/123\/|\.php/)
-    }
+  it.each(CODES)('never exposes the API key, the upstream host or the endpoint (%s)', (code) => {
+    expect(JSON.stringify(mapped(code).toJSON())).not.toMatch(/thesportsdb\.com|\/123\/|\.php/)
   })
 })

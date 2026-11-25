@@ -20,15 +20,10 @@ let stopping = false
 function stop(code) {
   if (stopping) return
   stopping = true
-  for (const child of children) {
-    if (child.exitCode === null) child.kill('SIGTERM')
-  }
+  children.forEach(child => child.kill())
   process.exitCode = code
 }
 
-for (const child of children) {
-  child.on('exit', code => stop(code ?? 0))
-}
-for (const signal of ['SIGINT', 'SIGTERM']) {
-  process.on(signal, () => stop(0))
-}
+children.forEach(child => child.on('exit', code => stop(code ?? 0)))
+const SIGNALS = ['SIGINT', 'SIGTERM']
+SIGNALS.forEach(signal => process.on(signal, () => stop(0)))

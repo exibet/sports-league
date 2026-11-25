@@ -250,7 +250,7 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
 
 ## Phase 4 — State and the list page (completes the core brief R1–R8)
 
-- [ ] **P4.1 — Search utilities**
+- [x] **P4.1 — Search utilities**
   - Goal: Pure functions for the search: fold, match, and highlight ranges that align with the original string.
   - Depends on: P3.6
   - Files: `app/utils/search.ts`, `tests/unit/app/search.test.ts`
@@ -268,7 +268,7 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Commit: `feat(leagues): add diacritics-insensitive search utils`
   - Requirements: R3, E1
 
-- [ ] **P4.2 — Sport options, season labels, query-param helpers**
+- [x] **P4.2 — Sport options, season labels, query-param helpers**
   - Goal: The remaining pure helpers the stores and components need.
   - Depends on: P4.1
   - Files: `nuxt.config.ts`, `app/utils/sports.ts`, `app/utils/season.ts`, `app/utils/query.ts`, `tests/unit/app/sports.test.ts`, `tests/unit/app/season.test.ts`, `tests/unit/app/query.test.ts`
@@ -285,7 +285,7 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Commit: `feat(leagues): add sport, season and query helpers`
   - Requirements: R4, R7
 
-- [ ] **P4.3 — Leagues data store**
+- [x] **P4.3 — Leagues data store**
   - Goal: A Pinia store that owns the league list, `fetchedAt` and request status, and loads through our `/api`.
   - Depends on: P4.2
   - Files: `app/stores/leagues.ts`, `tests/nuxt/stores/leagues.test.ts`
@@ -294,21 +294,22 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
     - a second `load()` makes no request;
     - two parallel `load()` calls share one request;
     - a failure sets `status: 'error'` with a string message and does not throw;
-    - `load({ force: true })` after a failure retries;
+    - a `load()` after a failure retries;
     - `sportOptions` comes from P4.2.
   - Done when: state is serialisable (no `Error` objects, no promises); the in-flight promise lives in the setup closure; the store uses the global `$fetch` with a relative URL (in-process on the server).
   - Verify: `npm run test:run`.
   - Out of scope: URL state (P4.6); rendering.
   - Commit: `feat(leagues): add leagues store`
+  - Notes: `$fetch` uses `retry: 0` (ofetch retries a failed GET once by default); recorded in `decisions.md` §3.2. The badge store does the same. No `force` option: `load()` already retries whenever the last attempt failed (phase review).
   - Requirements: R1, R8, E1
 
-- [ ] **P4.4 — List page, first render**
+- [x] **P4.4 — List page, first render**
   - Goal: `/` server-renders the league list with name and sport — the first rendering step.
   - Depends on: P4.3
   - Files: `app/pages/index.vue`, `app/layouts/default.vue`, `app/components/LeagueList.vue`, `app/components/LeagueRow.vue`, `app/app.vue`, `tests/nuxt/app.test.ts`
   - Tests: update the app mount test to assert the `h1` "Leagues" and one row per league, each showing both the name and the sport, from a mocked `/api/leagues`.
   - Done when:
-    - the page uses `await useAsyncData('leagues', …)` calling `store.load()` and returning `true` (not the list, which Pinia state already serialises);
+    - the page uses `await callOnce('leagues', () => store.load(), { mode: 'navigation' })` (the data lives in the store, so no `useAsyncData` result is needed);
     - the layout is a bare 960 px column (header and footer come in P5);
     - the `h1` "Leagues" is followed by the one-line description from `design.md`;
     - each row shows the sport icon tile, name and sport with a stable `:key`, non-interactive for now;
@@ -319,7 +320,7 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Commit: `feat(leagues): render league list page`
   - Requirements: R1, R2, R5, R6
 
-- [ ] **P4.5 — Playwright smoke test and e2e CI job**
+- [x] **P4.5 — Playwright smoke test and e2e CI job**
   - Goal: Catch SSR and hydration defects from now on: the production build renders the list with a clean console.
   - Depends on: P4.4
   - Files: `playwright.config.ts`, `tests/e2e/smoke.spec.ts`, `tests/e2e/helpers.ts`, `package.json`, `.github/workflows/ci.yml`, `CLAUDE.md`
@@ -336,7 +337,7 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Commit: `test(e2e): add playwright smoke test and ci job`
   - Requirements: R11, R6
 
-- [ ] **P4.6 — List state store: search and sport in the URL**
+- [x] **P4.6 — List state store: search and sport in the URL**
   - Goal: The URL-as-storage store for filters: derive `query` and `sport` from the route, write with `router.replace`.
   - Depends on: P4.5
   - Files: `app/stores/leagueList.ts`, `tests/nuxt/stores/leagueList.filters.test.ts`
@@ -357,7 +358,7 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Commit: `feat(leagues): sync search and sport filters with url`
   - Requirements: R3, R4, E1
 
-- [ ] **P4.7 — LeagueFilters, result count, reset**
+- [x] **P4.7 — LeagueFilters, result count, reset**
   - Goal: The filters row and the count row from `design.md`.
   - Depends on: P4.6
   - Files: `app/components/LeagueFilters.vue`, `app/components/LeagueCount.vue`, `app/pages/index.vue`, `tests/nuxt/components/LeagueFilters.test.ts`
@@ -368,7 +369,7 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
     - typing on while the debounced `replace` is still resolving loses no characters;
     - a trailing space ("english ") survives the debounced write;
     - reset with a pending write leaves `q` empty;
-    - the sport select is absent with one sport and present with several, with counts in the labels;
+    - the sport select is always present with counts in the labels: disabled with a note for one sport, enabled for several;
     - choosing "All sports" removes the param (driven through the select's `update:modelValue`; the real click path is covered in P7.1).
   - Done when:
     - `UInput` has a label and a clear button;
@@ -381,9 +382,10 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Verify: `npm run dev:fixtures` — type, pick a sport, reload: the screen is reproduced from the URL and Back leaves the page. Then build + smoke.
   - Out of scope: highlight and empty state (P4.8).
   - Commit: `feat(leagues): add search and sport filter controls`
+  - Notes: changed after the phase checkpoint by the owner: the sport select is always shown (disabled with a note for one sport) instead of hidden; the browser's own clear button of `type="search"` is hidden, so only our "Clear search" button shows.
   - Requirements: R3, R4, R5, R6
 
-- [ ] **P4.8 — Match highlight and list states**
+- [x] **P4.8 — Match highlight and list states**
   - Goal: The highlighted match in rows, and the empty, loading and error states of the list.
   - Depends on: P4.7
   - Files: `app/components/HighlightedText.vue`, `app/components/LeagueRow.vue`, `app/components/LeagueListEmpty.vue`, `app/components/LeagueListSkeleton.vue`, `app/components/LeagueListError.vue`, `app/pages/index.vue`, `tests/nuxt/components/HighlightedText.test.ts`
@@ -391,7 +393,7 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Done when:
     - no `v-html` is used;
     - the empty state names the query and offers "Clear filters";
-    - the error state is a `UAlert` with an explanation and "Try again" calling `load({ force: true })`;
+    - the error state is a `UAlert` with an explanation and "Try again" calling `load()`;
     - the skeleton (search, count, 6 rows) shows while status is pending (seen during a retry);
     - looks match `docs/design/states.png`.
   - Verify: `dev:fixtures` — a query with no results; run `nuxt dev` with `NUXT_SPORTSDB_BASE_URL` pointing at the fixture port while the fixture server is not running to see the error state, then start the fixture server and press "Try again". Then build + smoke.
@@ -399,7 +401,7 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Commit: `feat(leagues): add match highlight and list states`
   - Requirements: R3, R6, R5
 
-- [ ] **P4.9 — Season badge cache store**
+- [x] **P4.9 — Season badge cache store**
   - Goal: The client cache for season badges (R8): one request per league, shared in-flight promise, failures evicted.
   - Depends on: P4.8
   - Files: `app/stores/seasonBadges.ts`, `tests/nuxt/stores/seasonBadges.test.ts`
@@ -417,17 +419,17 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Commit: `feat(badges): add season badge cache store`
   - Requirements: R7, R8, E1
 
-- [ ] **P4.10 — Accordion state in the URL and the row button**
+- [x] **P4.10 — Accordion state in the URL and the row button**
   - Goal: `?open=` and `?season=` in the list store, and a league row that toggles.
   - Depends on: P4.9
   - Files: `app/stores/leagueList.ts`, `app/components/LeagueRow.vue`, `app/components/LeagueList.vue`, `tests/nuxt/stores/leagueList.accordion.test.ts`, `tests/nuxt/components/LeagueFilters.test.ts`
   - Tests:
     - `openId` derives from the route and is `null` for an unknown id or one not in the filtered list;
-    - `open(id)` sets `open`, clears `season` in the same `replace` and triggers `badges.load(id)`;
+    - `open(id)` sets `open` and clears `season` in the same `replace` (the panel loads the badges, P4.12);
     - `open` on another id replaces the first;
     - `close()` drops both params;
     - `setQuery` or `setSport` that hides the open league drops `open` and `season` in the same `replace`;
-    - `selectedSeason` falls back to the first cached season when `season` is missing or unknown;
+    - `season` derives from `?season=` as written (the panel falls back to the first season, P4.12);
     - `setSeason` writes `season`;
     - `open(id)` then `setQuery` in the same tick: the hide-check sees the new `open`;
     - (in `LeagueFilters.test.ts`) typing, then opening a matching league within 250 ms, ends with the typed text in the input and both `q` and `open` in the URL.
@@ -437,7 +439,7 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Commit: `feat(leagues): add accordion state synced with url`
   - Requirements: R7, E1, R5
 
-- [ ] **P4.11 — SeasonPicker with both modes**
+- [x] **P4.11 — SeasonPicker with both modes**
   - Goal: The season picker as a standalone controlled component: segmented radio group up to 5 seasons, stepper above (D11).
   - Depends on: P4.10
   - Files: `app/components/SeasonPicker.vue`, `tests/nuxt/components/SeasonPicker.test.ts`
@@ -454,12 +456,12 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Commit: `feat(badges): add season picker with segmented and stepper modes`
   - Requirements: R7, R5, R6
 
-- [ ] **P4.12 — SeasonBadgePanel, its states and SSR preload**
+- [x] **P4.12 — SeasonBadgePanel, its states and SSR preload**
   - Goal: Clicking a league shows a season badge (R7), with loading, empty and error states; a URL with `?open=` is server-rendered complete.
   - Depends on: P4.11
   - Files: `app/components/SeasonBadgePanel.vue`, `app/components/LeagueRow.vue`, `app/pages/index.vue`, `tests/nuxt/components/SeasonBadgePanel.test.ts`, `tests/e2e/smoke.spec.ts`
   - Tests:
-    - the panel shows the badge of `selectedSeason` with alt text, width and height;
+    - the panel shows the badge of `?season=` (or the first season when it is missing or unknown) with alt text, width and height;
     - picking a season calls `setSeason`;
     - a pending entry shows the skeleton;
     - `[]` shows "No season badges yet" with the reason;
@@ -469,15 +471,16 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Done when:
     - the badge sits on the badge-plate token;
     - the layout follows the container-query grid of `design.md` (wide > 520 px, narrow ≤ 520 px);
-    - the page's `useAsyncData` also awaits `badges.load(openId)` when `openId` is set, so no client request follows SSR;
+    - the panel loads its badges in `onServerPrefetch` (SSR) and `onMounted` (client), so a `?open=` URL is server-rendered and no client request follows SSR;
     - a repeat open is instant with no request;
     - there is no "League details" link yet (P6.4).
   - Verify: `dev:fixtures` — open a league with badges and one with none; the network tab shows one seasons request per league; at 320 and 390 px there is no horizontal scroll, the filters wrap and the panel uses its narrow layout. Then build + smoke.
   - Out of scope: the league page link; header and footer.
   - Commit: `feat(badges): show season badge panel in league rows`
+  - Notes: the smoke test also checks an open league at 320 px; it caught the season picker overflowing (a `fieldset` keeps its min-content width), so the picker is a `div role="radiogroup"` of native radios whose segments may shrink. After the phase review: the list page uses `callOnce` instead of `useAsyncData` returning `true`; the panel is the only place that loads badges; `selectedSeason` left the list store (the panel derives the season from `?season=`); the empty states use `UEmpty`; `SeasonPicker` uses `defineModel`.
   - Requirements: R7, R8, R5, R6
 
-**Checkpoint (Phase 4):** commits P4.1–P4.12 on `main`. The CI commands and `npm run test:e2e` pass locally. On the local production build (live data): 10 leagues render server-side, search filters and highlights, the sport dropdown is hidden (one sport), opening a league shows a badge, reopening makes no request, reload with `?q=&open=&season=` reproduces the screen, the console is clean, and at 390 px there is no horizontal scroll and the panel uses its narrow layout. **The core brief R1–R8 is complete here; everything after is cuttable.**
+**Checkpoint (Phase 4):** commits P4.1–P4.12 on `main`. The CI commands and `npm run test:e2e` pass locally. On the local production build (live data): 10 leagues render server-side, search filters and highlights, the sport dropdown is disabled with its note (one sport), opening a league shows a badge, reopening makes no request, reload with `?q=&open=&season=` reproduces the screen, the console is clean, and at 390 px there is no horizontal scroll and the panel uses its narrow layout. **The core brief R1–R8 is complete here; everything after is cuttable.**
 
 ---
 
@@ -672,7 +675,7 @@ If this phase is cut: mark its steps `[-]`, and in P8 adjust `decisions.md` §4,
   - Depends on: P7.1
   - Files: `tests/e2e/screenshot.spec.ts`, `docs/readme/sport-filter.png`, `package.json`, `README.md`, `playwright.config.ts`, `CLAUDE.md` (commands block gains `screenshot`)
   - Tests: none (the spec is a capture, excluded from `test:e2e` by a tag)
-  - Done when: `npm run screenshot` captures the list on mixed fixtures with the sport dropdown open at a fixed viewport, in the dark theme, to `docs/readme/sport-filter.png`; the README opens with that image, one sentence on why live data hides the dropdown, and `npm run dev:fixtures`; the capture is not part of CI (no diff churn).
+  - Done when: `npm run screenshot` captures the list on mixed fixtures with the sport dropdown open at a fixed viewport, in the dark theme, to `docs/readme/sport-filter.png`; the README opens with that image, one sentence on why the dropdown is disabled on live data, and `npm run dev:fixtures`; the capture is not part of CI (no diff churn).
   - Verify: run `npm run screenshot` and view the image; the README renders it in a Markdown preview.
   - Out of scope: the rest of the README (P8.1).
   - Commit: `docs(readme): add sport filter screenshot`
