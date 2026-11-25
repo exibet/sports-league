@@ -1,7 +1,8 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { flushPromises } from '@vue/test-utils'
+import { enableAutoUnmount, flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Router } from 'vue-router'
+import type { League } from '#shared/types/league'
 import LeagueFilters from '~/components/LeagueFilters.vue'
 import { useLeagueListStore } from '~/stores/leagueList'
 import { useLeaguesStore } from '~/stores/leagues'
@@ -9,10 +10,10 @@ import { LEAGUES, SOCCER_ONLY } from '../helpers/leagues'
 
 let router: Router
 
-async function mountFilters(leagues = LEAGUES) {
+async function mountFilters({ leagues = LEAGUES, attachTo }: { leagues?: League[], attachTo?: HTMLElement } = {}) {
   useLeaguesStore().$patch({ leagues, status: 'success' })
   // Mount on the current URL; by default `mountSuspended` navigates to a bare `/`.
-  const wrapper = await mountSuspended(LeagueFilters, { route: router.currentRoute.value.fullPath })
+  const wrapper = await mountSuspended(LeagueFilters, { route: router.currentRoute.value.fullPath, attachTo })
   const input = () => wrapper.get<HTMLInputElement>('input')
   return { wrapper, input, list: useLeagueListStore() }
 }
@@ -34,6 +35,8 @@ async function settle() {
 }
 
 const urlQuery = () => router.currentRoute.value.query
+
+enableAutoUnmount(afterEach)
 
 describe('LeagueFilters', () => {
   beforeEach(async () => {
@@ -148,18 +151,29 @@ describe('LeagueFilters', () => {
     expect(urlQuery()).toEqual({ open: '4328', q: 'premier' })
   })
 
-  it('the clear button empties the search at once', async () => {
+  it('the clear button empties the search at once and keeps focus in the field', async () => {
     await router.replace({ query: { q: 'liga' } })
-    const { wrapper, input } = await mountFilters()
+    const { wrapper, input } = await mountFilters({ attachTo: document.body })
 
     await wrapper.get('button[aria-label="Clear search"]').trigger('click')
 
     expect(input().element.value).toBe('')
     await vi.waitFor(() => expect(urlQuery()).toEqual({}))
+    expect(document.activeElement).toBe(input().element)
+  })
+
+  it('moves focus to the search field after a reset (the reset button disappears)', async () => {
+    await router.replace({ query: { q: 'liga', sport: 'Soccer' } })
+    const { input, list } = await mountFilters({ attachTo: document.body })
+
+    await list.reset()
+    await flushPromises()
+
+    expect(document.activeElement).toBe(input().element)
   })
 
   it('shows the sport select disabled, with its data and a note, when there is one sport', async () => {
-    const { wrapper } = await mountFilters(SOCCER_ONLY)
+    const { wrapper } = await mountFilters({ leagues: SOCCER_ONLY })
 
     const select = wrapper.findComponent({ name: 'USelect' })
     expect(select.exists()).toBe(true)

@@ -162,10 +162,11 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
     - a network failure throws `unreachable`;
     - the fetch is attempted exactly once (`retry: 0`);
     - the error message never contains the API key or the full upstream URL.
-  - Done when: the client takes `{ baseUrl, apiKey, timeoutMs, fetch? }` as arguments (no runtime-config access inside, so it is testable in the `node` project); it uses `ofetch` imported explicitly (a direct dependency; there is no global `$fetch` in the `node` project) with `retry: 0`, a timeout and `responseType: 'text'`, and parses the body itself; tests replace the transport (an injected `fetch`), never call the network; the timeout test uses a small real timeout and an injected `fetch` that rejects on abort (fake timers do not drive `AbortSignal`); coverage thresholds (lines 70, functions 70, branches 65) are enabled and `--passWithNoTests` is removed.
+  - Done when: the client takes `{ baseUrl, apiKey, timeoutMs }` as arguments (no runtime-config access inside, so it is testable in the `node` project); it uses `ofetch` imported explicitly (a direct dependency; there is no global `$fetch` in the `node` project) with `retry: 0`, a timeout and `responseType: 'text'`, and parses the body itself; tests replace the global `fetch` that ofetch calls (`vi.stubGlobal`), never call the network; the timeout test uses a small real timeout and a stubbed `fetch` that rejects on abort (fake timers do not drive `AbortSignal`); coverage thresholds (lines 70, functions 70, branches 65) are enabled and `--passWithNoTests` is removed.
   - Verify: `npm run test:coverage` passes with thresholds on; a temporary type error in `tests/unit/server/client.test.ts` fails `npm run typecheck`.
   - Out of scope: mapping to our types (P3.3), HTTP status mapping (P3.4), caching (P3.5).
   - Commit: `feat(api): add upstream client with error detection`
+  - Notes: changed in the Phase 5 review: no test-only `fetch` option; ofetch's `baseURL` joins the base URL (no manual slash trimming) and tests stub the global `fetch`.
   - Requirements: R1, R7, R8, E1
 
 - [x] **P3.3 — Normalise leagues and season badges**
@@ -210,7 +211,7 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Depends on: P3.4
   - Files: `nuxt.config.ts`, `server/utils/cached.ts`, `server/api/leagues/index.get.ts`, `server/api/leagues/[id]/seasons.get.ts`, `tests/unit/helpers/nitro.ts`, `tests/unit/server/routes.test.ts`
   - Tests:
-    - `/api/leagues` returns `{ leagues, fetchedAt }` and sets `Cache-Control: public, max-age=60, s-maxage=14400, stale-while-revalidate=14400`;
+    - `/api/leagues` returns `{ leagues, fetchedAt }` and sets `Cache-Control: public, max-age=60, s-maxage=1800, stale-while-revalidate=1800` (30 min; 4 h in the first plan, shortened by the owner);
     - the seasons route with a bad id → 400 and with an unknown id → 404, with the seasons upstream function not called in either case;
     - a known id returns `SeasonBadge[]` with `s-maxage=604800`;
     - an upstream failure → 502 with **no** `Cache-Control` header;
@@ -488,29 +489,31 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
 
 If this phase is cut: mark its steps `[-]`, drop "the footer freshness line is absent" from the Phase 6 checkpoint and "in both themes" from P8.7, and in P8 adjust `design.md` (header, footer), `decisions.md` §3.5 (theme, footer), D3 and D12, and the SSR-safety rule in `CLAUDE.md` (it names the footer and the theme toggle).
 
-- [ ] **P5.1 — AppHeader and theme toggle**
+- [x] **P5.1 — AppHeader and theme toggle**
   - Goal: The sticky header from `design.md` with a hydration-safe theme toggle.
   - Depends on: P4.12
-  - Files: `app/components/AppHeader.vue`, `app/layouts/default.vue`, `shared/constants.ts`, `app/assets/css/main.css`
+  - Files: `app/components/AppHeader.vue`, `app/components/AppWordmark.vue`, `app/layouts/default.vue`, `shared/constants.ts`, `app/assets/css/main.css`
   - Tests: none new (the smoke test guards hydration)
-  - Done when: the header is 64 px, sticky, translucent with blur; logo mark and wordmark link home; the GitHub link (URL from `shared/constants.ts`) opens in a new tab with `rel="noopener noreferrer"` and screen-reader text; `UColorModeButton` renders its icon client-side only; icon buttons are ≥ 44 px with `aria-label`; the light theme uses green-700 primary and the badge plate is correct in both themes.
+  - Done when: the header is Nuxt UI `UHeader` (64 px, sticky, translucent, 12 px blur) inside a full-height flex column with `UContainer` as `main` (on a short page the footer sits at the bottom of the screen; the smoke test checks it); logo mark and wordmark link home; the GitHub link (URL from `shared/constants.ts`) opens in a new tab with `rel="noopener noreferrer"` and screen-reader text; `UColorModeButton` renders both icons and the `dark` class shows one (no flash, nothing time-dependent to hydrate); icon buttons and links have ≥ 44 px targets with `aria-label`; `scroll-padding-top` keeps a focused row out from under the sticky header; the light theme uses green-700 primary and the badge plate is correct in both themes.
   - Verify: toggle the theme, reload (the preference persists, no flash of the wrong icon); build + smoke.
   - Out of scope: the footer.
   - Commit: `feat(ui): add app header with theme toggle`
+  - Notes: changed from the first plan: no `ClientOnly` for the toggle (Nuxt UI switches its icons by CSS) and `UHeader` instead of a hand-written sticky header (phase review). `UMain` was tried and dropped: it is a full screen tall and pushed the footer below the fold. The logo and wordmark are one `AppWordmark`, reused by the footer.
   - Requirements: R6, R5
 
-- [ ] **P5.2 — AppFooter with the client-only freshness line**
+- [x] **P5.2 — AppFooter with the client-only freshness line**
   - Goal: The footer from `design.md`; "Updated N min ago" appears only on the client and only when `fetchedAt` is known (D12).
   - Depends on: P5.1
-  - Files: `app/components/AppFooter.vue`, `app/utils/relativeTime.ts`, `app/layouts/default.vue`, `tests/unit/app/relativeTime.test.ts`
-  - Tests: `minutesAgo(fetchedAt, now)` → "just now" under 1 min, "1 min ago", "N min ago", hours above 60 min; a `now` earlier than `fetchedAt` → "just now".
-  - Done when: three columns plus the bottom bar with the links from `design.md`; the freshness line is inside `ClientOnly`, guarded by `fetchedAt`, refreshed on a 60 s interval that is cleared on unmount; nothing time-dependent is in the server HTML; footer links are ≥ 44 px targets; "Back to top" works.
+  - Files: `app/components/AppFooter.vue`, `app/components/DataFreshness.vue`, `app/layouts/default.vue`, `tests/e2e/smoke.spec.ts`
+  - Tests: the smoke test sees the client-only "Updated …" line after hydration, with a clean console.
+  - Done when: three columns (brand, Project, Data — Data last) on one rhythm (a 28 px heading row, then lines 8 px apart) plus the bottom bar with the links from `design.md`; the freshness line is VueUse `useTimeAgo` with its default messages and refresh, inside `ClientOnly`, guarded by `fetchedAt`; nothing time-dependent is in the server HTML; footer links keep ≥ 44 px targets; "Back to top" works and respects `prefers-reduced-motion`, as does the pulsing dot.
   - Verify: view-source of `/` has no "min ago" text; build + smoke.
   - Out of scope: the league page.
   - Commit: `feat(ui): add app footer with data freshness`
+  - Notes: changed from the first plan (`relativeTime.ts` with its unit tests and our own 60 s interval): VueUse `useTimeAgo` already formats and refreshes, so neither is needed. "Back to top" uses VueUse `useWindowScroll`; the columns follow the owner's order and one shared rhythm.
   - Requirements: R6, R5
 
-- [ ] **P5.3 — Accessibility pass**
+- [x] **P5.3 — Accessibility pass**
   - Goal: Walk `design.md` "Accessibility" and checklist group J over the list page and fix what fails.
   - Depends on: P5.2
   - Files: the components touched by the findings (expected: `LeagueRow.vue`, `SeasonBadgePanel.vue`, `LeagueFilters.vue`, `SeasonPicker.vue`)
@@ -519,17 +522,19 @@ If this phase is cut: mark its steps `[-]`, drop "the footer freshness line is a
   - Verify: a keyboard-only walk-through in both themes; a screen-reader spot check of the row button and the picker; build + smoke.
   - Out of scope: visual redesign; the league page.
   - Commit: `fix(a11y): keyboard, focus and target size pass`
+  - Notes: the one fix: focus moved to the body when the clicked button disappeared (search ×, "Reset filters", "Clear filters"); it now returns to the search field. A scripted keyboard walk, target-size and contrast check found nothing else (lowest contrast: light footer text, 4.55:1).
   - Requirements: R6
 
-- [ ] **P5.4 — Responsive check against the design**
+- [x] **P5.4 — Responsive check against the design**
   - Goal: Compare the list page with `docs/design/list-desktop.png`, `list-mobile.png` and `states.png`, and fix deviations.
   - Depends on: P5.3
   - Files: the components touched by the findings; `app/assets/css/main.css` if a token is off
   - Tests: none new
-  - Done when: at 320, 390, 768 and 1280 px there is no horizontal scroll; the filters wrap; the panel switches layout at its 520 px container width; picker labels fit at 320 px; side padding follows `clamp(16px, 4vw, 24px)`; remaining deliberate differences from the prototype are listed in the step's `Notes:`.
+  - Done when: at 320, 390, 768 and 1280 px there is no horizontal scroll; the filters wrap; the panel switches layout at its 520 px container width; picker labels fit at 320 px; the content column is `UContainer` at 960 px (`--ui-container`) with Nuxt UI's side padding; remaining deliberate differences from the prototype are listed in the step's `Notes:`.
   - Verify: browser device toolbar at the four widths in both themes, using `dev:fixtures`; build + smoke.
   - Out of scope: new features.
   - Commit: `fix(ui): responsive layout pass for list page`
+  - Notes: deliberate differences from the prototype: side padding is Nuxt UI's container default (16/24/32 px instead of `clamp(16px, 4vw, 24px)`, 8 px more at ≥ 1024 px) rather than fighting its responsive classes; the sport select is always shown (owner decision, R4); the "League details" link comes with the league page (P6.4); the empty states are Nuxt UI `UEmpty` (centred).
   - Requirements: R6
 
 **Checkpoint (Phase 5):** commits P5.1–P5.4 on `main`. The CI commands and `npm run test:e2e` pass locally. The local production build matches the list screenshots at 390 and 1280 px in both themes, with header and footer present, the freshness line visible after load and a clean console.

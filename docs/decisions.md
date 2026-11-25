@@ -81,8 +81,8 @@ server in tests and `dev:fixtures`).
 
 1. **Nitro, server side.** Upstream calls are `defineCachedFunction`s with an explicit `name` and
    `getKey` (league id), `swr: true`, called with `event` as the first argument so SWR
-   revalidation survives on serverless (`waitUntil`). TTLs: leagues 4 h (matches upstream
-   `max-age`), details 24 h, seasons 7 days (archive seasons never change). Function-level caching
+   revalidation survives on serverless (`waitUntil`). TTLs: leagues 30 min (owner decision; upstream
+   sends `max-age` 4 h, but a shorter TTL keeps the list fresher), details 24 h, seasons 7 days (archive seasons never change). Function-level caching
    lets two routes share the seasons cache and keeps validation and error mapping outside it. The
    leagues value carries `fetchedAt`. Storage is in-memory (per Vercel instance, lost on cold
    start); Redis or Vercel KV is a one-line `nitro.storage` change (noted, not done). In
@@ -144,8 +144,12 @@ server in tests and `dev:fixtures`).
 - Domain components (starting point for the plan): `AppHeader`, `AppFooter`, `LeagueFilters`,
   `LeagueList`, `LeagueRow` (accordion row), `SeasonBadgePanel`, `SeasonPicker`, `LeagueHero`,
   `SeasonBadgeGrid`, plus loading, empty and error states.
-- Nuxt UI primitives inside: `UInput`, `USelect`, `URadioGroup`, `UButton`, `UBadge`, `USkeleton`,
-  `UAlert`, `UColorModeButton`.
+- Nuxt UI inside: `UHeader`, `UContainer`, `UInput`, `USelect`, `UButton`, `UBadge`,
+  `USkeleton`, `UAlert`, `UEmpty`, `UColorModeButton`; VueUse for debounce, time-ago and scrolling.
+- `LeagueRow` is a hand-written accordion row, not `UAccordion`: `UAccordion` renders its header
+  as a `div`, which would lose the `h2` around the row button that `design.md` requires. The season
+  picker uses native radios rather than `URadioGroup`, whose variants do not give the filled
+  segments of the design.
 
 ### 3.5 Product logic
 
@@ -165,8 +169,10 @@ server in tests and `dev:fixtures`).
 - **League page navigation:** first visit shows the Nuxt loading bar while data loads; repeat visit
   is instant.
 - **Theme:** dark by default (`colorMode.preference: 'dark'`, default storage), light available via
-  `UColorModeButton`. Its icon renders client-side only to avoid a hydration mismatch.
-- **Footer "Updated N min ago":** rendered on the client only, and only when the leagues store has
+  `UColorModeButton`. It renders both icons and the `dark` class (set before paint) shows one, so
+  there is no hydration mismatch and no icon flash.
+- **Footer "Updated N minutes ago":** rendered on the client only (`ClientOnly`, VueUse
+  `useTimeAgo` with its default messages and refresh), and only when the leagues store has
   `fetchedAt` (so it is absent on a directly opened league page).
 - **Images:** badges and logos use TheSportsDB's `/small` variant (~20 KB instead of ~48 KB) with
   explicit width, height and alt text.
@@ -236,7 +242,7 @@ Published on purpose (the brief invites AI use and asks to describe it):
 |---|---|---|
 | D1 | Showing the sport dropdown when live data has one sport | Always visible, disabled with a note on one sport; unit + e2e on mixed fixtures; README screenshot; `npm run dev:fixtures`; no demo data in production |
 | D2 | E2E data source | Fixture server via `NUXT_SPORTSDB_BASE_URL`, against the production build |
-| D3 | Theme | Dark by default, toggle, default storage; client-only toggle icon |
+| D3 | Theme | Dark by default, toggle, default storage; the toggle's icons switch by CSS, no flash |
 | D4 | Where list state lives | URL (`q`, `sport`, `open`, `season`) as storage, Pinia as interface and data cache; store reads `useRouter().currentRoute` |
 | D5 | Repository language | English everywhere |
 | D6 | Repository | Public `exibet/sports-league` |

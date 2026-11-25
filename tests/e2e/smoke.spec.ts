@@ -12,8 +12,10 @@ test('the list page renders from the production build with a clean console', asy
   await page.goto('/')
 
   await expect(page.getByRole('heading', { level: 1, name: 'Leagues' })).toBeVisible()
-  await expect(page.getByRole('listitem')).toHaveCount(FIXTURE_LEAGUES)
+  await expect(page.getByRole('main').getByRole('listitem')).toHaveCount(FIXTURE_LEAGUES)
   await expect(page.getByText('Formula 1')).toBeVisible()
+  // Client-only, after hydration: the footer's freshness line.
+  await expect(page.getByText(/^Updated /)).toBeVisible()
   // No upstream API, icon or font host: everything is served by the app (or the fixture images).
   expect(foreign, 'requests to a non-local host').toEqual([])
 })
@@ -21,7 +23,7 @@ test('the list page renders from the production build with a clean console', asy
 test('the list page has no horizontal scroll at 390 px', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  await expect(page.getByRole('listitem')).toHaveCount(FIXTURE_LEAGUES)
+  await expect(page.getByRole('main').getByRole('listitem')).toHaveCount(FIXTURE_LEAGUES)
 
   expect(await pageOverflow(page)).toBeLessThanOrEqual(0)
 })
@@ -52,4 +54,11 @@ test('an open league fits a 320 px screen, season picker included', async ({ pag
   const panel = await page.getByRole('region', { name: /English Premier League/ }).boundingBox()
   expect(await pageOverflow(page)).toBeLessThanOrEqual(0)
   expect(picker!.x + picker!.width).toBeLessThanOrEqual(panel!.x + panel!.width)
+})
+
+test('on a short page the footer is on screen without scrolling', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/?q=premier')
+
+  await expect(page.getByRole('contentinfo')).toBeInViewport()
 })

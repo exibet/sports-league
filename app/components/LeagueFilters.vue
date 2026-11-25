@@ -1,10 +1,4 @@
 <script setup lang="ts">
-// `type="search"` keeps the search keyboard on phones; the browser's own clear button is hidden
-// because ours (below) looks and works the same in every browser.
-const SEARCH_UI = {
-  base: 'min-h-11 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none',
-  trailing: 'pe-1',
-}
 /** The select primitive rejects an empty-string value, so "All sports" needs a sentinel. */
 const ALL_SPORTS = '__all__'
 
@@ -13,6 +7,7 @@ const list = useLeagueListStore()
 
 // The one allowed local copy of URL state: typing shows at once, the URL follows debounced.
 const draft = ref(list.query)
+const search = useTemplateRef<{ inputRef: HTMLInputElement | null }>('search')
 // What this component last wrote to the URL: its arrival must not re-sync the draft.
 let ownWrite: string | undefined
 
@@ -26,9 +21,15 @@ function onInput(text: string) {
   void writeQuery(text)
 }
 
+/** The button that was clicked (×, "Reset filters", "Clear filters") disappears: keep focus here. */
+function focusSearch() {
+  search.value?.inputRef?.focus()
+}
+
 function clear() {
   onInput('')
   void writeQuery.flush()
+  focusSearch()
 }
 
 // `q` changed from outside (Back, Forward): take it and drop the pending write. Synchronous, so
@@ -48,6 +49,7 @@ list.$onAction(({ name, after }) => {
   writeQuery.cancel()
   after(() => {
     draft.value = ''
+    focusSearch()
   })
 })
 
@@ -78,14 +80,17 @@ function onSport(value: string) {
       >Search leagues</label>
       <UInput
         id="league-search"
+        ref="search"
         :model-value="draft"
-        type="search"
+        type="text"
+        inputmode="search"
+        enterkeyhint="search"
         placeholder="Search leagues…"
         icon="i-lucide-search"
         size="xl"
         autocomplete="off"
         class="w-full"
-        :ui="SEARCH_UI"
+        :ui="{ base: 'min-h-11', trailing: 'pe-1' }"
         @update:model-value="onInput"
       >
         <template

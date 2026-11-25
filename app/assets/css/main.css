@@ -13,7 +13,14 @@
   --color-badge-plate: var(--badge-plate);
 }
 
+html {
+  /* Focus moving to a row above the viewport must not end up under the sticky header. */
+  scroll-padding-top: var(--ui-header-height);
+}
+
 :root {
+  /* The content column of `UContainer` (header, page, footer): 960 px. */
+  --ui-container: 60rem;
   /* green-700: white text on green-500 is only 2.3:1 */
   --ui-primary: var(--ui-color-primary-700);
   --badge-plate: #ffffff;

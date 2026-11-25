@@ -40,7 +40,8 @@ component hardcodes a color; everything goes through the tokens below.
 
 ## Layout
 
-- Content column max 960 px, side padding `clamp(16px, 4vw, 24px)`.
+- Content column max 960 px (`UContainer` with `--ui-container: 60rem`); side padding is Nuxt UI's
+  container default (16 / 24 / 32 px), close to the prototype's `clamp(16px, 4vw, 24px)`.
 - **Header** (sticky, 64 px, translucent background with `backdrop-filter: blur(12px)`): logo
   mark (primary square with a ball icon, skewed −8°) + wordmark "SPORTS LEAGUES" (800 italic
   uppercase, "Leagues" in primary) linking home; GitHub link; theme toggle.
@@ -66,8 +67,8 @@ component hardcodes a color; everything goes through the tokens below.
   "Season badges" grid `repeat(auto-fill, minmax(104px, 1fr))` with season captions.
 - **Footer** (muted background): brand column (wordmark, one-liner, stack chips: Nuxt 4, Nuxt UI,
   Pinia, Nitro cache, Vercel) · "Data" column (pulsing dot + "TheSportsDB free API", "Updated N
-  min ago" from `fetchedAt` — client-only, hidden when the list is not loaded, "Cached on the
-  server for 4 hours") · "Project" column (Source code, API documentation) · bottom bar (© + "Not affiliated with TheSportsDB", "Back to top").
+  minutes ago" from `fetchedAt` — client-only, hidden when the list is not loaded, "Cached on the
+  server for 30 minutes") · "Project" column (Source code, API documentation) · bottom bar (© + "Not affiliated with TheSportsDB", "Back to top").
 
 ## States
 

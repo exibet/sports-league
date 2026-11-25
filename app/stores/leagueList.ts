@@ -1,6 +1,6 @@
 import type { LocationQuery, RouteLocationNormalizedLoaded } from 'vue-router'
 import type { League } from '#shared/types/league'
-import { patchedQuery, queryValue } from '~/utils/query'
+import { queryValue } from '~/utils/query'
 import { matchesQuery } from '~/utils/search'
 
 type QueryPatch = Record<string, string | undefined>
@@ -69,7 +69,8 @@ export const useLeagueListStore = defineStore('leagueList', () => {
     const write = pending.then(async () => {
       const route = router.currentRoute.value
       if (!isListRoute(route)) return
-      await router.replace({ query: patchedQuery(route.query, build(route.query)) })
+      // Same key order, and the router drops `undefined` values: an unchanged query is no navigation.
+      await router.replace({ query: { ...route.query, ...build(route.query) } })
     })
     pending = write.catch(() => undefined)
     return write
@@ -80,14 +81,15 @@ export const useLeagueListStore = defineStore('leagueList', () => {
    * hide the open league. Decided on the current URL, inside the serialised section.
    */
   function filterPatch(current: LocationQuery, patch: QueryPatch): QueryPatch {
-    const next = patchedQuery(current, patch)
+    const next = { ...current, ...patch }
     const openLeague = leagues.leagues.find(league => league.id === queryValue(next.open))
     const visible = !openLeague || isShown(openLeague, queryValue(next.q) ?? '', knownSport(queryValue(next.sport)))
     return visible ? patch : { ...patch, open: undefined, season: undefined }
   }
 
+  /** Writes the text as typed (a trailing space survives); a blank one removes `q`. */
   function setQuery(text: string): Promise<void> {
-    return patchQuery(current => filterPatch(current, { q: text }))
+    return patchQuery(current => filterPatch(current, { q: text.trim() ? text : undefined }))
   }
 
   function setSport(value: string | undefined): Promise<void> {

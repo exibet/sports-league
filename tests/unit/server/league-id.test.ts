@@ -23,7 +23,10 @@ describe('parseLeagueId', () => {
 })
 
 describe('assertKnownLeague', () => {
-  const known = new Set(['4328', '4329'])
+  const known = [
+    { id: '4328', name: 'English Premier League', sport: 'Soccer' },
+    { id: '4329', name: 'English League Championship', sport: 'Soccer' },
+  ]
 
   it.each(['999999', '0', '123456789012345678901234567890'])('answers 404 for unknown id %s', (id) => {
     expect(statusOf(() => assertKnownLeague(id, known))).toBe(404)

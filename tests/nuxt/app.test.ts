@@ -10,7 +10,7 @@ describe('app', () => {
     const wrapper = await mountSuspended(App, { route: '/' })
 
     expect(wrapper.get('h1').text()).toBe('Leagues')
-    const rows = wrapper.findAll('li').map(row => row.text())
+    const rows = wrapper.get('main').findAll('li').map(row => row.text())
     expect(rows).toHaveLength(LEAGUES.length)
     LEAGUES.forEach((league, index) => {
       expect(rows[index]).toContain(league.name)

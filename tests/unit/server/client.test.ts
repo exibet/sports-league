@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fetchUpstream, type UpstreamClientOptions } from '~~/server/utils/sportsdb/client'
 import { UpstreamError } from '~~/server/utils/sportsdb/errors'
 import { readFixture } from './fixtures'
@@ -7,14 +7,20 @@ const API_KEY = 'secret-key-42'
 const BASE_URL = 'https://upstream.test/api/v1/json'
 const RATE_LIMITED = readFixture('rate-limited.txt')
 
-type FetchImpl = NonNullable<UpstreamClientOptions['fetch']>
+type FetchImpl = typeof globalThis.fetch
 
-function respond(body: string, init: ResponseInit = {}): FetchImpl {
-  return vi.fn<FetchImpl>(async () => new Response(body, init))
+/** Replaces the global `fetch` that ofetch calls; returns the stub to assert on. */
+function stubFetch(fetch: FetchImpl): FetchImpl {
+  vi.stubGlobal('fetch', fetch)
+  return fetch
 }
 
-function client(fetch: FetchImpl, timeoutMs = 1000): UpstreamClientOptions {
-  return { baseUrl: BASE_URL, apiKey: API_KEY, timeoutMs, fetch }
+function respond(body: string, init: ResponseInit = {}): FetchImpl {
+  return stubFetch(vi.fn<FetchImpl>(async () => new Response(body, init)))
+}
+
+function client(timeoutMs = 1000): UpstreamClientOptions {
+  return { baseUrl: BASE_URL, apiKey: API_KEY, timeoutMs }
 }
 
 async function failure(promise: Promise<unknown>): Promise<UpstreamError> {
@@ -26,12 +32,16 @@ async function failure(promise: Promise<unknown>): Promise<UpstreamError> {
 }
 
 describe('fetchUpstream', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('returns the parsed JSON body', async () => {
-    const fetch = respond('{"leagues":[{"idLeague":"4328"}]}', {
+    respond('{"leagues":[{"idLeague":"4328"}]}', {
       headers: { 'content-type': 'application/json' },
     })
 
-    await expect(fetchUpstream(client(fetch), 'all_leagues.php')).resolves.toEqual({
+    await expect(fetchUpstream(client(), 'all_leagues.php')).resolves.toEqual({
       leagues: [{ idLeague: '4328' }],
     })
   })
@@ -39,7 +49,7 @@ describe('fetchUpstream', () => {
   it('requests <baseUrl>/<key>/<endpoint> with the query', async () => {
     const fetch = respond('{}')
 
-    await fetchUpstream(client(fetch), 'search_all_seasons.php', { badge: 1, id: '4328' })
+    await fetchUpstream(client(), 'search_all_seasons.php', { badge: 1, id: '4328' })
 
     const request = vi.mocked(fetch).mock.calls[0]?.[0]
     expect(String(request instanceof Request ? request.url : request)).toBe(
@@ -48,33 +58,37 @@ describe('fetchUpstream', () => {
   })
 
   it('throws rate-limited on HTTP 429', async () => {
-    const error = await failure(fetchUpstream(client(respond(RATE_LIMITED, { status: 429 })), 'all_leagues.php'))
+    respond(RATE_LIMITED, { status: 429 })
+    const error = await failure(fetchUpstream(client(), 'all_leagues.php'))
 
     expect(error.code).toBe('rate-limited')
   })
 
   it('throws rate-limited on a 200 body "error code: 1015"', async () => {
-    const error = await failure(fetchUpstream(client(respond(RATE_LIMITED)), 'all_leagues.php'))
+    respond(RATE_LIMITED)
+    const error = await failure(fetchUpstream(client(), 'all_leagues.php'))
 
     expect(error.code).toBe('rate-limited')
   })
 
   it('throws invalid-response on an HTML body', async () => {
-    const fetch = respond('<!doctype html><title>Maintenance</title>', { headers: { 'content-type': 'text/html' } })
+    respond('<!doctype html><title>Maintenance</title>', { headers: { 'content-type': 'text/html' } })
 
-    const error = await failure(fetchUpstream(client(fetch), 'all_leagues.php'))
+    const error = await failure(fetchUpstream(client(), 'all_leagues.php'))
 
     expect(error.code).toBe('invalid-response')
   })
 
   it('throws invalid-response on an empty body', async () => {
-    const error = await failure(fetchUpstream(client(respond('')), 'all_leagues.php'))
+    respond('')
+    const error = await failure(fetchUpstream(client(), 'all_leagues.php'))
 
     expect(error.code).toBe('invalid-response')
   })
 
   it('throws bad-status on another error status', async () => {
-    const error = await failure(fetchUpstream(client(respond('{}', { status: 503 })), 'all_leagues.php'))
+    respond('{}', { status: 503 })
+    const error = await failure(fetchUpstream(client(), 'all_leagues.php'))
 
     expect(error.code).toBe('bad-status')
     expect(error.status).toBe(503)
@@ -83,21 +97,21 @@ describe('fetchUpstream', () => {
   it('throws timeout when the upstream does not answer in time', async () => {
     // Fake timers do not drive AbortSignal, so a small real timeout and a fetch that only
     // settles when it is aborted.
-    const fetch = vi.fn<FetchImpl>((_input, init) => new Promise((_resolve, reject) => {
+    stubFetch(vi.fn<FetchImpl>((_input, init) => new Promise((_resolve, reject) => {
       init?.signal?.addEventListener('abort', () => reject(init.signal?.reason))
-    }))
+    })))
 
-    const error = await failure(fetchUpstream(client(fetch, 20), 'all_leagues.php'))
+    const error = await failure(fetchUpstream(client(20), 'all_leagues.php'))
 
     expect(error.code).toBe('timeout')
   })
 
   it('throws unreachable on a network failure', async () => {
-    const fetch = vi.fn<FetchImpl>(async () => {
+    stubFetch(vi.fn<FetchImpl>(async () => {
       throw new TypeError('fetch failed')
-    })
+    }))
 
-    const error = await failure(fetchUpstream(client(fetch), 'all_leagues.php'))
+    const error = await failure(fetchUpstream(client(), 'all_leagues.php'))
 
     expect(error.code).toBe('unreachable')
   })
@@ -105,7 +119,7 @@ describe('fetchUpstream', () => {
   it.each([429, 500, 503])('attempts the request exactly once on HTTP %i', async (status) => {
     const fetch = respond('{}', { status })
 
-    await failure(fetchUpstream(client(fetch), 'all_leagues.php'))
+    await failure(fetchUpstream(client(), 'all_leagues.php'))
 
     expect(fetch).toHaveBeenCalledTimes(1)
   })
@@ -114,11 +128,12 @@ describe('fetchUpstream', () => {
     ['a rate limit', () => respond(RATE_LIMITED, { status: 429 })],
     ['an HTML body', () => respond('<html>', { status: 200 })],
     ['a server error', () => respond('{}', { status: 500 })],
-    ['a network error naming the URL', () => vi.fn<FetchImpl>(async () => {
+    ['a network error naming the URL', () => stubFetch(vi.fn<FetchImpl>(async () => {
       throw new TypeError(`fetch failed for ${BASE_URL}/${API_KEY}/all_leagues.php`)
-    })],
+    }))],
   ])('never exposes the API key or the upstream URL (%s)', async (_case, makeFetch) => {
-    const error = await failure(fetchUpstream(client(makeFetch()), 'all_leagues.php'))
+    makeFetch()
+    const error = await failure(fetchUpstream(client(), 'all_leagues.php'))
     const exposed = [error.message, String(error), JSON.stringify(error), String(error.cause ?? '')].join(' ')
 
     expect(exposed).not.toContain(API_KEY)

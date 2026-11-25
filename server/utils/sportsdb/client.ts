@@ -6,8 +6,6 @@ export interface UpstreamClientOptions {
   baseUrl: string
   apiKey: string
   timeoutMs: number
-  /** The transport; tests inject one, production uses the global `fetch`. */
-  fetch?: typeof globalThis.fetch
 }
 
 export type UpstreamQuery = Record<string, string | number>
@@ -25,12 +23,10 @@ export async function fetchUpstream(
   endpoint: string,
   query?: UpstreamQuery,
 ): Promise<unknown> {
-  const request = options.fetch ? ofetch.create({}, { fetch: options.fetch }) : ofetch
-  const url = `${options.baseUrl.replace(/\/+$/, '')}/${encodeURIComponent(options.apiKey)}/${endpoint}`
-
   let response
   try {
-    response = await request.raw<string, 'text'>(url, {
+    response = await ofetch.raw<string, 'text'>(`/${encodeURIComponent(options.apiKey)}/${endpoint}`, {
+      baseURL: options.baseUrl,
       query,
       timeout: options.timeoutMs,
       // ofetch retries GETs on 429 and 5xx by default, which doubles the pressure on the limit.

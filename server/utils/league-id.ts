@@ -1,4 +1,5 @@
 import { createError } from 'h3'
+import type { League } from '#shared/types/league'
 
 const DIGITS = /^\d+$/
 
@@ -17,8 +18,8 @@ export function parseLeagueId(raw: string | undefined): string {
  * The id must belong to the cached league list (404), before any per-league upstream call:
  * crawlers cannot burn the rate limit or grow the cache with made-up ids.
  */
-export function assertKnownLeague(id: string, knownIds: ReadonlySet<string>): void {
-  if (!knownIds.has(id)) {
+export function assertKnownLeague(id: string, leagues: readonly League[]): void {
+  if (!leagues.some(league => league.id === id)) {
     throw createError({ statusCode: 404, statusMessage: 'Not Found', message: 'There is no league with this id.' })
   }
 }

@@ -73,8 +73,8 @@ Once per machine: `npx playwright install chromium`.
 - **Server:** validate `:id` (digits, and present in the cached league list) before any upstream
   call; never cache an error; set `Cache-Control` in the handler on success only.
 - **SSR safety:** no `window`/`document`/`localStorage` outside `onMounted` or
-  `import.meta.client`; nothing time-dependent in the server render (the footer's "updated N min
-  ago" and the theme toggle icon are client-only).
+  `import.meta.client`; nothing time-dependent in the server render (the footer's "updated N
+  minutes ago" is client-only; the theme toggle renders both icons and the `dark` class shows one).
 - **Styling:** colors, radii and fonts only through Nuxt UI semantic tokens / CSS variables. The
   single exception is the badge-plate token (see `docs/design.md`).
 - **Icons:** local Iconify collections (`@iconify-json/*`), never the runtime Iconify API.

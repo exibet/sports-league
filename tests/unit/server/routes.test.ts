@@ -5,7 +5,7 @@ import { readJsonFixture } from './fixtures'
 
 vi.mock('#server/utils/sportsdb/client', () => ({ fetchUpstream: vi.fn() }))
 
-const LEAGUES_CACHE = 'public, max-age=60, s-maxage=14400, stale-while-revalidate=14400'
+const LEAGUES_CACHE = 'public, max-age=60, s-maxage=1800, stale-while-revalidate=1800'
 const SEASONS_CACHE = 'public, max-age=60, s-maxage=604800, stale-while-revalidate=604800'
 
 let stubs: NitroStubs
@@ -121,7 +121,7 @@ describe('API routes', () => {
 
   it('declares both cached functions with a name, swr and the documented maxAge', () => {
     expect(stubs.declarations).toEqual([
-      { name: 'leagues', maxAge: 14400, swr: true, hasGetKey: true },
+      { name: 'leagues', maxAge: 1800, swr: true, hasGetKey: true },
       { name: 'seasons', maxAge: 604800, swr: true, hasGetKey: true },
     ])
   })

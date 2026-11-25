@@ -9,7 +9,7 @@ export default defineEventHandler(async (event): Promise<SeasonBadge[]> => {
   try {
     // Only ids from the cached league list reach the per-league upstream call.
     const { leagues } = await getLeagues(event)
-    assertKnownLeague(id, new Set(leagues.map(league => league.id)))
+    assertKnownLeague(id, leagues)
     const seasons = await getSeasons(event, id)
     setResponseHeader(event, 'Cache-Control', cacheControl(SEASONS_MAX_AGE))
     return seasons

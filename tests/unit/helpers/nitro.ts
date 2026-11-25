@@ -51,10 +51,8 @@ export function installNitroStubs({ memoise }: { memoise: boolean }): NitroStubs
     return async (...args: A): Promise<R> => {
       const key = options.getKey?.(...args) ?? ''
       stubs.keys.push({ name: options.name, key })
-      if (memoise && stored.has(key)) {
-        const value = stored.get(key)
-        if (value !== undefined) return value
-      }
+      const cached = memoise ? stored.get(key) : undefined
+      if (cached !== undefined) return cached
       const value = await fn(...args)
       if (memoise) stored.set(key, value)
       return value
