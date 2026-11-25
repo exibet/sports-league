@@ -5,7 +5,7 @@ description: Work through docs/plan.md one step at a time — pick the next step
 
 # Phase
 
-Executes `docs/plan.md`, one step per run. Never commits, pushes or opens a PR on its own — it
+Executes `docs/plan.md`, one step per run, or a whole phase when the owner asks. Never commits, pushes or opens a PR on its own — it
 stops at "ready to commit" and waits.
 
 ## Plan format (contract with `docs/plan.md`)
@@ -32,16 +32,15 @@ stops at "ready to commit" and waits.
    whose `Depends on` steps are `[x]`. If a dependency is not done, say so and ask.
    Skip `[-]` steps; a dependency on a `[-]` step means ask.
    **Phase gate:** Phase 3 starts after P2.8 is `[x]`; a later phase starts only after the
-   previous phase's checkpoint has passed and the owner approves. No phase branches: every step
-   commits to the local `main`.
+   previous phase's commit is made. No phase branches; one local commit on `main` per phase.
    **Owner steps** (marked "(owner)"): list the owner's actions, wait for the confirmation, then
    tick; no implementation, review or commit. P2.8 is the one owner step with a commit: it stays
    `[ ]` in that commit and is ticked in the next one.
 2. **Start clean.** If the working tree has changes that do not belong to this step, stop and ask
    (commit them, stash them, or treat them as part of the step). A tick in `docs/plan.md` left by
    a step without its own commit (owner steps) is not a stray change: it rides in this commit.
-   In Phase 2 (P2.1–P2.7), changes left by earlier P2 steps belong to the phase (one initial
-   commit in P2.8): do not stop on them.
+   Changes left by earlier steps of the same phase belong to the phase (one commit per phase):
+   do not stop on them.
 3. **Load context:** `CLAUDE.md`, the step's requirements in `docs/requirements.md`, the relevant
    sections of `docs/decisions.md`, `docs/api.md`, `docs/design.md`. Restate the goal, "Done when"
    and "Out of scope" in a few lines.
@@ -69,6 +68,8 @@ stops at "ready to commit" and waits.
    Next: P2.4 — …
    ```
 
-   If this is the last step of its phase, add the phase's checkpoint to the report. Then wait.
-   Commit only when the owner says so, with the proposed message (Conventional
-   Commits, no `Co-Authored-By`, never `--no-verify`).
+   `Proposed commit` is the step's `Commit:` line, a line of the phase commit's body. If the owner
+   asked to run the whole phase, continue with the next step after the report instead of waiting.
+   At the last step of a phase, add the phase's checkpoint and the proposed phase commit (summary
+   naming the phase, body listing the steps' `Commit:` lines) to the report, then wait. Commit only
+   when the owner says so (Conventional Commits, no `Co-Authored-By`, never `--no-verify`).

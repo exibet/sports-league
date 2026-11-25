@@ -9,9 +9,11 @@ Base URL: `https://www.thesportsdb.com/api/v1/json/{key}/` · docs: https://www.
 
 - **CORS is open:** `access-control-allow-origin: *`.
 - `all_leagues.php` sends `cache-control: public, max-age=14400` (4 hours).
-- **Rate limit.** About ten rapid requests in a row get answered by Cloudflare with a plain-text
-  body `error code: 1015`. The body is not JSON. The server layer must detect it, return a clear
-  error and never cache it. How long the block lasts was not measured; assume minutes.
+- **Rate limit.** About ten rapid requests in a row get answered by Cloudflare with **HTTP 429**
+  and a plain-text body `error code: 1015`. The body is not JSON. The server layer must detect it,
+  return a clear error and never cache it. A pause does not help much: during the fixture capture
+  (2026-11-25), ten sequential requests 2.5 s apart were answered and the eleventh was blocked;
+  the block was still active a minute later. Its full length was not measured; assume minutes.
 - Images (badges, logos) are served from `https://r2.thesportsdb.com/images/media/...`, a separate
   CDN host that is not affected by the API rate limit. Appending `/small` or `/tiny` to an image
   URL returns a smaller variant (one badge: 48 KB full, 20 KB `/small`, 11 KB `/tiny`); we use
@@ -128,8 +130,11 @@ Errors:
 - non-numeric `:id` → 400; an id not in the cached league list → 404 (no per-league upstream
   call in either case; validation may load the cached league list);
 - `seasons: null`, the error string or all-null badges → `[]`; `leagues: null` → 404;
-- upstream timeout, 429, `1015` or non-JSON → 502 with a readable message, not cached. These are
-  detected **before** normalisation, so an error is never turned into a cached `[]`.
+- upstream timeout (8 s), 429, `1015`, another error status or non-JSON → 502 with a readable
+  `message` and the failure kind in `data.reason` (`rate-limited`, `timeout`, `unreachable`,
+  `bad-status`, `invalid-response`), not cached. These are detected **before** normalisation, so
+  an error is never turned into a cached `[]`; a payload without the expected `leagues`/`seasons`
+  key is `invalid-response` too.
 
 Upstream calls use `retry: 0` and a timeout.
 

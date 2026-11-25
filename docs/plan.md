@@ -6,9 +6,9 @@ Legend: `[ ]` not started, `[~]` in progress, `[x]` done, `[-]` cut (with a `Not
 Core comes first: Phases 2–4 deliver the whole core brief (R1–R8). Phases 5, 6 and 7 are each independently shippable and cuttable; Phase 8 (delivery) always runs and adapts to what was cut.
 Every git action (init, commit, push, PR, merge) and every dashboard action happens only on the owner's explicit request; steps marked **(owner)** need the owner's hands.
 Commits follow Conventional Commits (lowercase, summary ≤ 72 chars, scope by area, no `Co-Authored-By` trailer, never `--no-verify`).
-Every step commits straight to the local `main` (no phase branches, no PRs); the ticked `docs/plan.md` travels with each step's commit. The remote, CI on GitHub, the hosting and the `main` ruleset come at the end, in Phase 8 (owner decision, D13).
+Each phase ends in **one local commit on `main`** (no phase branches, no PRs): its steps accumulate in the working tree, the owner reviews the whole phase at its checkpoint, and the commit is made on the owner's command. Its summary names the phase; its body lists the steps' `Commit:` lines; the ticked `docs/plan.md` travels with it. The remote, CI on GitHub, the hosting and the `main` ruleset come at the end, in Phase 8 (owner decision, D13).
 Phase gate: a phase starts only after the previous phase's checkpoint has passed and the owner approves. The last step of a phase stops at the checkpoint, which is verified locally: the CI commands in CI order and the production build (`npm run build && npm run preview`).
-Ticks of steps without their own commit (the owner steps, and P2.8, whose "Done when" is only true after its commit) ride in the next step's commit; P2.8 stays `[ ]` in its own commit; P8.7 is never ticked in the repository.
+Ticks of owner steps and of P2.8 (whose "Done when" is only true after its commit) ride in the next commit; P8.7 is never ticked in the repository. Phase 8 is the exception to one commit per phase: P8.1–P8.3 form its local commit, and P8.4–P8.7 publish.
 A cut phase marks its steps `[-]` (the ticks ride in the next step's commit) and follows the "If this phase is cut" line in its header.
 Once P4.5 is `[x]`, every step also runs `npm run build` and `npm run test:smoke`.
 
@@ -137,7 +137,7 @@ Phase 2 is the one exception to "one step, one commit": D13 wants a single initi
 
 Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The league-details upstream call belongs to Phase 6, so Phase 6 stays cuttable.
 
-- [ ] **P3.1 — Shared types and upstream fixtures**
+- [x] **P3.1 — Shared types and upstream fixtures**
   - Goal: One type definition for both sides, and captured upstream payloads that all later tests and the fixture server reuse.
   - Depends on: P2.8
   - Files: `shared/types/league.ts`, `tests/fixtures/upstream/all_leagues.live.json`, `tests/fixtures/upstream/all_leagues.mixed.json`, `tests/fixtures/upstream/seasons/*.json` (one per fixture league, all 12; 4329 and 4338 are the real all-null ones), `tests/fixtures/upstream/rate-limited.txt`, `tests/fixtures/README.md`
@@ -146,9 +146,10 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Verify: `npm run typecheck`; every JSON file parses (`node -e` over the directory).
   - Out of scope: any code that reads the fixtures.
   - Commit: `test(api): add shared types and upstream fixtures`
+  - Notes: the capture hit the rate limit after ten requests (2.5 s apart), so `seasons/4338.json`, 4387, 4370, the unknown-id and invalid-id responses are synthetic, reproducing `api.md`; `rate-limited.txt` is a real capture (HTTP 429). The unknown-id and invalid-id files are `seasons-unknown-id.json` and `seasons-invalid-id.json` next to `seasons/`.
   - Requirements: R1, R7, E1
 
-- [ ] **P3.2 — Upstream client with error detection**
+- [x] **P3.2 — Upstream client with error detection**
   - Goal: One function that performs an upstream GET and throws on every failure mode before anything is normalised.
   - Depends on: P3.1
   - Files: `server/utils/sportsdb/client.ts`, `server/utils/sportsdb/errors.ts`, `tests/unit/server/client.test.ts`, `vitest.config.ts`, `package.json`
@@ -167,7 +168,7 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Commit: `feat(api): add upstream client with error detection`
   - Requirements: R1, R7, R8, E1
 
-- [ ] **P3.3 — Normalise leagues and season badges**
+- [x] **P3.3 — Normalise leagues and season badges**
   - Goal: Pure mappers from upstream payloads to `League[]` and `SeasonBadge[]`; the only place upstream field names appear.
   - Depends on: P3.2
   - Files: `server/utils/sportsdb/normalise.ts`, `tests/unit/server/normalise.test.ts`
@@ -186,7 +187,7 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Commit: `feat(api): normalise leagues and season badges`
   - Requirements: R1, R2, R7
 
-- [ ] **P3.4 — League id validation and HTTP error mapping**
+- [x] **P3.4 — League id validation and HTTP error mapping**
   - Goal: Decide 400/404 before any upstream call, and turn upstream failures into a readable 502.
   - Depends on: P3.3
   - Files: `package.json`, `server/utils/league-id.ts`, `server/utils/http-errors.ts`, `tests/unit/server/league-id.test.ts`, `tests/unit/server/http-errors.test.ts`
@@ -195,15 +196,16 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
     - digits not in the known id list (a 30-digit string included) → 404;
     - a known id → returned as a string;
     - each `UpstreamError` kind → 502 with its own short message;
-    - an unknown error → 502 generic;
+    - any other error passes through unchanged (Nitro answers 500 and logs it);
     - no message contains the key or upstream host.
   - Done when: both helpers are pure (the known ids are passed in) and import `createError` explicitly from `h3`, which becomes a direct dependency here (`npm ls h3` shows one copy, the same major as Nitro's).
   - Verify: `npm run test:coverage`.
   - Out of scope: route handlers.
   - Commit: `feat(api): validate league ids and map upstream errors`
+  - Notes: changed in the phase review: an unknown error is no longer a generic 502 (that hid our own bugs as upstream failures and was never logged); the id check is split into `parseLeagueId` (400, before anything is loaded) and `assertKnownLeague` (404).
   - Requirements: R7, R8
 
-- [ ] **P3.5 — Cached functions, runtime config and the two list routes**
+- [x] **P3.5 — Cached functions, runtime config and the two list routes**
   - Goal: `GET /api/leagues` and `GET /api/leagues/:id/seasons` backed by `defineCachedFunction`, with HTTP cache headers on success only.
   - Depends on: P3.4
   - Files: `nuxt.config.ts`, `server/utils/cached.ts`, `server/api/leagues/index.get.ts`, `server/api/leagues/[id]/seasons.get.ts`, `tests/unit/helpers/nitro.ts`, `tests/unit/server/routes.test.ts`
@@ -226,7 +228,7 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
   - Commit: `feat(api): add cached league and season badge routes`
   - Requirements: R1, R7, R8, E1
 
-- [ ] **P3.6 — Fixture server and `dev:fixtures`**
+- [x] **P3.6 — Fixture server and `dev:fixtures`**
   - Goal: A zero-dependency local stand-in for the upstream API, used by `dev:fixtures` now and by Playwright from P4.5. Brought forward from the e2e phase because the sport dropdown cannot be developed or reviewed on live data.
   - Depends on: P3.5
   - Files: `tests/fixtures/server.mjs`, `tests/fixtures/images/*.png` (a few tiny files), `scripts/dev-fixtures.mjs`, `package.json`, `CLAUDE.md`

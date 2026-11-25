@@ -1,0 +1,24 @@
+{
+  "seasons": [
+    {
+      "strSeason": "1950",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badgearchive/f1-1950.png"
+    },
+    {
+      "strSeason": "1951",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badgearchive/f1-1951.png"
+    },
+    {
+      "strSeason": "1952",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badgearchive/f1-1952.png"
+    },
+    {
+      "strSeason": "1953",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badgearchive/f1-1953.png"
+    },
+    {
+      "strSeason": "1954",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badgearchive/f1-1954.png"
+    }
+  ]
+}

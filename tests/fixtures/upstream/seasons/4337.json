@@ -1,0 +1,24 @@
+{
+  "seasons": [
+    {
+      "strSeason": "2012-2013",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badgearchive/8siotp1701073784.png"
+    },
+    {
+      "strSeason": "2013-2014",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badgearchive/kh67h01701073784.png"
+    },
+    {
+      "strSeason": "2014-2015",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badgearchive/fql19p1701073783.png"
+    },
+    {
+      "strSeason": "2015-2016",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badgearchive/xy66c81701099412.png"
+    },
+    {
+      "strSeason": "2016-2017",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badgearchive/k9726s1701073768.png"
+    }
+  ]
+}

@@ -13,6 +13,7 @@ export default defineConfig({
         resolve: {
           alias: {
             '#shared': fromRoot('./shared'),
+            '#server': fromRoot('./server'),
             '~~': fromRoot('.'),
             '~': fromRoot('./app'),
           },
@@ -36,12 +37,11 @@ export default defineConfig({
       // Only the `node` project is measured: @nuxt/test-utils does not support coverage.
       provider: 'v8',
       include: ['server/**', 'shared/**', 'app/utils/**'],
-      // Enabled in P3.2, with the first server tests.
-      // thresholds: {
-      //   lines: 70,
-      //   functions: 70,
-      //   branches: 65,
-      // },
+      thresholds: {
+        lines: 70,
+        functions: 70,
+        branches: 65,
+      },
     },
   },
 })

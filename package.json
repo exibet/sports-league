@@ -8,6 +8,7 @@
   "scripts": {
     "---------DEV---------": "",
     "dev": "nuxt dev",
+    "dev:fixtures": "node scripts/dev-fixtures.mjs",
     "build": "nuxt build",
     "preview": "nuxt preview",
     "---------QUALITY---------": "",
@@ -17,7 +18,7 @@
     "---------TEST---------": "",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --project node --coverage --passWithNoTests",
+    "test:coverage": "vitest run --project node --coverage",
     "---------SETUP---------": "",
     "postinstall": "nuxt prepare",
     "prepare": "husky"
@@ -25,7 +26,9 @@
   "dependencies": {
     "@nuxt/ui": "^4.13.1",
     "@pinia/nuxt": "^1.0.3",
+    "h3": "^1.15.11",
     "nuxt": "^4.7.0",
+    "ofetch": "^1.5.1",
     "pinia": "^4.1.0",
     "tailwindcss": "^4.3.5",
     "vue": "^3.5.46",

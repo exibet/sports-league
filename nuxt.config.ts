@@ -12,11 +12,22 @@ export default defineNuxtConfig({
   colorMode: {
     preference: 'dark',
   },
+  // Server-only (no `public` key): the browser never sees the key or the upstream URL. Overridden
+  // by NUXT_SPORTSDB_API_KEY and NUXT_SPORTSDB_BASE_URL (the fixture server in tests).
+  runtimeConfig: {
+    sportsdbApiKey: '123',
+    sportsdbBaseUrl: 'https://www.thesportsdb.com/api/v1/json',
+  },
   compatibilityDate: '2026-11-01',
   nitro: {
+    // In-memory in development too, so live data (`dev`) and fixture data (`dev:fixtures`) never
+    // mix in a cache persisted on disk.
+    devStorage: {
+      cache: { driver: 'memory' },
+    },
     typescript: {
       tsConfig: {
-        include: ['../tests/unit/server/**/*'],
+        include: ['../tests/unit/server/**/*', '../tests/unit/helpers/**/*'],
       },
     },
   },

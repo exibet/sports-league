@@ -67,7 +67,10 @@ server in tests and `dev:fixtures`).
 - **Normalisation:** `seasons: null`, the error string and all-null badges become `[]`; seasons
   with a null badge are dropped; `leagues: null` from `lookupleague` → 404; descriptions keep the
   first paragraph with stripped-IPA fragments removed by one regex.
-- **Error responses:** 502 with a readable message, never cached, never leaking the key.
+- **Error responses:** upstream failures → 502 with a readable message and `data.reason`, never
+  cached, never leaking the key. A malformed id is a 400 before anything is loaded. Any other
+  error (a bug of ours) is left to Nitro: a logged 500 with a generic message, not disguised as
+  an upstream failure.
 - **Trade-off, stated openly:** a server proxy puts every visitor behind one rate-limit bucket
   (and Vercel egress IPs are shared), where direct browser calls would each have their own.
   Mitigations: the server cache, request dedup, 404 for unknown ids, and warming every league's
@@ -194,8 +197,8 @@ server in tests and `dev:fixtures`).
   underneath, aware of the project's directories) with stylistic (no semicolons, single quotes),
   `no-console: error` (allowed only in `scripts/**` and `tests/fixtures/**`, which print to the
   terminal), `@typescript-eslint/no-explicit-any: error`, `vue/max-len: 120`.
-- **Git flow:** all work is committed locally on `main`, one commit per plan step, with no phase
-  branches and no PRs. Publishing comes last, at delivery: the first push and CI run, Vercel, then
+- **Git flow:** all work is committed locally on `main`, one commit per plan phase (made after the
+  owner reviews the phase), with no phase branches and no PRs. Publishing comes last, at delivery: the first push and CI run, Vercel, then
   a ruleset on `main` (no deletion or force-push, linear history, PR required, rebase or squash
   merge, required checks "Lint, Typecheck, Test, Build" and `E2E`). History is never rewritten
   after the first push. Until then, every plan step runs the CI commands locally in CI order.
@@ -234,7 +237,7 @@ Published on purpose (the brief invites AI use and asks to describe it):
 | D10 | Badge UI in the list | Inline accordion panel with `SeasonPicker` and a "League details" link |
 | D11 | Season picker | Both modes (segmented ≤ 5, stepper > 5) in the component from the start |
 | D12 | Footer freshness line | Client-only, only when `fetchedAt` is known |
-| D13 | Git flow | Every step committed locally on `main`, no branches or PRs; push, CI, Vercel and the ruleset at delivery |
+| D13 | Git flow | One local commit per phase on `main`, no branches or PRs; push, CI, Vercel and the ruleset at delivery |
 
 ## 8. Out of scope (next steps)
 

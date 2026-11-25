@@ -19,14 +19,15 @@ When a decision changes, update `docs/decisions.md` in the same change.
 
 ```bash
 npm run dev            # dev server against the live API
+npm run dev:fixtures   # dev server + fixture server (mixed sports, edge cases)
 npm run build          # production build ;  preview — serve it
 npm run lint           # eslint --fix ;  lint:check — no fix (CI)
 npm run typecheck      # nuxt typecheck (app, server, tests, configs)
 npm run test           # vitest watch ;  test:run — once ;  test:coverage — node project + coverage
 ```
 
-Planned: `dev:fixtures` (dev server + fixture server, added in P3.6); `test:smoke` and `test:e2e`
-(Playwright against an existing production build and the fixture server, added in P4.5).
+Planned: `test:smoke` and `test:e2e` (Playwright against an existing production build and the
+fixture server, added in P4.5).
 
 ## Architecture in one screen
 
@@ -86,7 +87,8 @@ hydration warnings). Never weaken a rule, threshold or test to make a check pass
   report, ask.
 - Conventional Commits (`feat(leagues): …`), lowercase type, summary ≤ 72 chars, body lines ≤ 100.
 - **Never add a `Co-Authored-By` trailer.** Never use `--no-verify`.
-- All commits go to the local `main`, one per plan step; no phase branches, no PRs. The remote,
+- All commits go to the local `main`, one per plan phase after the owner reviews it; no phase
+  branches, no PRs. The remote,
   CI on GitHub, Vercel and the `main` ruleset come at delivery (Phase 8 of `docs/plan.md`).
 
 ## Skills

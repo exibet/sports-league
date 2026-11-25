@@ -1,0 +1,24 @@
+{
+  "seasons": [
+    {
+      "strSeason": "1960-1961",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badgearchive/nba-1960.png"
+    },
+    {
+      "strSeason": "1961-1962",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badgearchive/nba-1960.png"
+    },
+    {
+      "strSeason": "1962-1963",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badgearchive/nba-1962.png"
+    },
+    {
+      "strSeason": "1963-1964",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badgearchive/nba-1962.png"
+    },
+    {
+      "strSeason": "1964-1965",
+      "strBadge": "{{FIXTURE_ORIGIN}}/images/media/league/badgearchive/nba-1962.png"
+    }
+  ]
+}
