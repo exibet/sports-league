@@ -1,5 +1,13 @@
 name: CI
 
+# Lint, Typecheck and Unit tests run in parallel; Build starts when all three pass, and E2E runs
+# on that same build. Audit only reports. One gate job at the end is the required check of `main`.
+#
+#   Lint ───────┐
+#   Typecheck ──┼──► Build ──► E2E
+#   Unit tests ─┘
+#   Audit
+
 on:
   pull_request:
   push:
@@ -13,56 +21,101 @@ permissions:
   contents: read
 
 jobs:
-  check:
-    # The name is the required status check of the `main` ruleset; keep them in sync.
-    name: Lint, Typecheck, Test, Build
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
-
       - run: npm ci
-
       - run: npm run lint:check
 
-      - run: npm run typecheck
-
-      - run: npm run test:run
-
-      - run: npm run test:coverage
-
-      - run: npm run build
-
-      - name: npm audit (non-blocking)
-        run: npm audit
-        continue-on-error: true
-
-  e2e:
-    # Not a required check until the `main` ruleset is enabled at delivery (plan step P8.6).
-    name: E2E
+  typecheck:
+    name: Typecheck
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
-
       - run: npm ci
+      - run: npm run typecheck
 
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Each Vitest project once: `node` with the coverage thresholds, then `nuxt`.
+      - name: Server, shared code and utilities, with coverage thresholds
+        run: npm run test:coverage
+      - name: Stores, components and pages
+        run: npx vitest run --project nuxt
+
+  audit:
+    name: Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      # Reads the lockfile only. Reported, not blocking: a new advisory must not stop unrelated work.
+      - run: npm audit
+        continue-on-error: true
+
+  build:
+    name: Build
+    needs: [lint, typecheck, unit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
       - run: npm run build
+      # E2E runs on exactly this build instead of building again.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: build
+          path: .output/
+          include-hidden-files: true
+          retention-days: 1
 
+  e2e:
+    name: E2E
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v8
+        with:
+          name: build
+          path: .output
       - run: npx playwright install --with-deps chromium
-
       - run: npm run test:e2e
-
       - name: Upload the Playwright report
         if: failure()
         uses: actions/upload-artifact@v7
@@ -70,3 +123,18 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # The required status check of the `main` ruleset: keep the name in sync with it. One gate
+  # instead of every job, so jobs can change without touching the ruleset. `always()`, because a
+  # required check that is skipped (a job it needs failed) would count as passed. E2E is not part
+  # of it: it runs on every pull request but is not required (the owner's choice).
+  required:
+    name: Lint, Typecheck, Test, Build
+    needs: [lint, typecheck, unit, build]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fail unless every required job passed
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped')
+        run: exit 1

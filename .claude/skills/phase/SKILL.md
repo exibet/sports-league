@@ -53,8 +53,11 @@ stops at "ready to commit" and waits.
    P2.3, `npm run test:run` from P2.4), plus `npm run build` and the
    smoke test once the plan's smoke step is done, plus the step's own `Verify`. Fix failures the
    step caused. Never weaken a rule, threshold or test to pass.
-7. **Review:** run the `review` skill with `--scope=working --no-checks`. Fix every 🔴, then run
-   step 6 again. List the remaining 🔧/💬 in the report.
+7. **Review:** after each step, run the `review` skill with `--scope=working --no-checks
+   --no-agent`. At the last step of a phase (before the phase commit), run it with
+   `--scope=working` and the independent reviewer (Opus at xhigh; `--fable` only when the owner
+   asked for Fable). Fix every 🔴 and every verified library-first or readability finding, then
+   run step 6 again. List what was not taken, and why, in the report.
 8. **Tick the step** `[x]`; add a `Notes:` line only if something differs from the plan. If a
    decision changed, update `docs/decisions.md`.
 9. **Report and stop:**

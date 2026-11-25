@@ -54,7 +54,7 @@ function handle(request, response) {
   response.end('not a fixture route')
 }
 
-export function startFixtureServer(port = DEFAULT_PORT) {
+function startFixtureServer(port = DEFAULT_PORT) {
   const server = createServer((request, response) => {
     response.on('finish', () => console.log(`[fixtures] ${request.method} ${request.url} ${response.statusCode}`))
     handle(request, response)

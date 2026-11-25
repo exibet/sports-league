@@ -8,9 +8,9 @@ export interface UpstreamClientOptions {
   timeoutMs: number
 }
 
-export type UpstreamQuery = Record<string, string | number>
+type UpstreamQuery = Record<string, string | number>
 
-/** Cloudflare's rate-limit page: plain text, sometimes with HTTP 200 (docs/api.md). */
+/** Cloudflare's rate-limit page (plain text, docs/api.md): recognised by its body, whatever the status. */
 const RATE_LIMIT_BODY = /^error code: 1015\b/
 
 /**
@@ -23,24 +23,20 @@ export async function fetchUpstream(
   endpoint: string,
   query?: UpstreamQuery,
 ): Promise<unknown> {
-  let response
-  try {
-    response = await ofetch.raw<string, 'text'>(`/${encodeURIComponent(options.apiKey)}/${endpoint}`, {
-      baseURL: options.baseUrl,
-      query,
-      timeout: options.timeoutMs,
-      // ofetch retries GETs on 429 and 5xx by default, which doubles the pressure on the limit.
-      retry: 0,
-      responseType: 'text',
-      // Statuses are classified below, together with the body.
-      ignoreResponseError: true,
-    })
-  }
-  catch (error) {
-    const cause = error instanceof FetchError ? error.cause : error
-    const timedOut = cause instanceof Error && (cause.name === 'TimeoutError' || cause.name === 'AbortError')
+  const response = await ofetch.raw<string, 'text'>(`/${encodeURIComponent(options.apiKey)}/${endpoint}`, {
+    baseURL: options.baseUrl,
+    query,
+    timeout: options.timeoutMs,
+    // ofetch retries GETs on 429 and 5xx by default, which doubles the pressure on the limit.
+    retry: 0,
+    responseType: 'text',
+    // Statuses are classified below, together with the body.
+    ignoreResponseError: true,
+  }).catch((error: unknown) => {
+    // Only the network can fail here; ofetch aborts a timed-out request with a `TimeoutError`.
+    const timedOut = error instanceof FetchError && error.cause instanceof Error && error.cause.name === 'TimeoutError'
     throw new UpstreamError(timedOut ? 'timeout' : 'unreachable', endpoint)
-  }
+  })
 
   const body = (response._data ?? '').trim()
   if (response.status === 429 || RATE_LIMIT_BODY.test(body)) {

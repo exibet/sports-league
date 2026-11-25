@@ -1,7 +1,7 @@
 import type { LeagueDetails, LeagueDetailsResponse } from '#shared/types/league'
 import { apiErrorMessage, apiErrorStatus } from '~/utils/api-error'
 
-export type DetailsEntry
+type DetailsEntry
   = | { status: 'pending' }
     | { status: 'success', details: LeagueDetails }
     | { status: 'not-found' }

@@ -77,13 +77,31 @@ Walk every group; report only real violations in the diff.
 - `SeasonPicker` not switching modes above 5 seasons; "no badges" not handled.
 - More than one accordion row open at a time.
 
-## G. SOLID / DRY / KISS and simplification
+## G. The owner's code style, SOLID / DRY / KISS
 
-- Code that reads like a machine wrote it: repeated or no-op guards ("if undefined, return it"),
-  defensive checks of what the types already guarantee, validation repeated past the trust
-  boundary. One check at the boundary is enough.
-- A `for`/`while` loop where `map`/`filter`/`flatMap`/`reduce`/`find`/`some` reads better.
-- A hand-written helper (debounce, timer, listener, storage, media query) that VueUse already has.
+Readability first — code is written for people, and the owner reads it:
+- Code that reads like a machine wrote it: repeated or no-op guards ("if undefined/empty/null,
+  return it"), defensive checks of what the types already guarantee, validation repeated past the
+  trust boundary (upstream JSON, URL params). One check at the boundary is enough; "must not break,
+  within reason" — not ten checks of the same thing.
+- A `for`/`while` loop where `map`/`filter`/`flatMap`/`reduce`/`find`/`some`/`Object.fromEntries`/
+  `Object.groupBy` reads better (tests included: `it.each`, `forEach`).
+- `x.some(…) ? y : z` where `x.find(…)?.y` says it; a ternary repeated three times where a lookup
+  map says it; two computeds for one fact.
+- A long function or template that does several things; a comment explaining what a better name
+  would.
+
+Library-first — before our own code, what we already have (verify against `node_modules`):
+- A hand-written helper that VueUse has: debounce (`useDebounceFn`, with `cancel`/`flush`),
+  timers and intervals (`useIntervalFn`, `useNow`, `useTimeAgo`), listeners, scrolling
+  (`useWindowScroll`), reduced motion, storage, media queries. No hand-written `setTimeout`.
+- What Vue, Nuxt or Nuxt UI provides: `defineModel`, `callOnce`, route param patterns in
+  `definePageMeta({ path })`, `router.resolve`, `NuxtLoadingIndicator`, `UContainer`, `UHeader`,
+  `UEmpty`, `UAlert` actions, the icon module's `clientBundle`, `useSeoMeta`.
+- What vue-router, ofetch, h3 or Nitro already do: dropping `undefined` query values, `baseURL`,
+  `retry`, `createError`, cache `validate`.
+- What Playwright already does: web-first assertions, `toHaveURL`, `expect.poll`, `test.use`,
+  tags and `grep`, `animations: 'disabled'`, `Promise.withResolvers` for a held request.
 - A component that fetches, transforms and renders — move data access to a store/composable.
 - A `ref` mirrored by a `watch` where a `computed` works; derivable state stored.
 - An abstraction with one caller, a wrapper that only forwards, an option nobody passes.
@@ -119,7 +137,14 @@ Walk every group; report only real violations in the diff.
 
 - New logic without a unit test (adapter, normalisation, filters, store actions).
 - Tests hitting the live API instead of fixtures. 🔴
-- E2E depending on test order or on the server cache from a previous test.
+- A test that passes vacuously: an assertion already true before the action, an "it did not
+  happen" check without a positive control (a request counter that would also be empty for the
+  wrong URL), a locator that matches nothing, a check made before the state could change. 🔴 when
+  it is the proof of a planned behaviour.
+- A test that proves nothing new: it would still pass with the fix reverted. (When adding a test
+  for a bug, check that it fails without the fix.)
+- E2E depending on test order or on the server cache from a previous test; a first interaction
+  before hydration (use `visit()`); sleeps (`waitForTimeout`, hand-made timers).
 - Assertions on implementation details instead of behaviour; snapshot-only tests.
 - Coverage thresholds lowered or `include` narrowed to make a check pass. 🔴
 

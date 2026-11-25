@@ -3,7 +3,7 @@
 import { createApp, createRouter, toWebHandler } from 'h3'
 import { vi } from 'vitest'
 
-export const TEST_CONFIG = {
+const TEST_CONFIG = {
   sportsdbApiKey: 'test-key',
   sportsdbBaseUrl: 'https://upstream.test/api/v1/json',
 }
@@ -15,7 +15,7 @@ interface CachedOptions<A extends unknown[]> {
   swr?: boolean
 }
 
-export interface CachedDeclaration {
+interface CachedDeclaration {
   name?: string
   maxAge?: number
   swr?: boolean

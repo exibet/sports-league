@@ -1,6 +1,6 @@
 # Plan
 
-This is the phased implementation plan for the project described in `docs/requirements.md` (R1–R13, E1) and `docs/decisions.md` (D1–D13).
+This is the phased implementation plan for the project described in `docs/requirements.md` (R1–R13, E1) and `docs/decisions.md` (D1–D14).
 Run it with the `phase` skill (`/phase` or `/phase P3.2`): one step per run — tests first, implement, verify, review, tick, propose a commit, stop.
 Legend: `[ ]` not started, `[~]` in progress, `[x]` done, `[-]` cut (with a `Notes:` line giving the reason); a `Notes:` line is otherwise added only when the result differs from the plan.
 Core comes first: Phases 2–4 deliver the whole core brief (R1–R8). Phases 5, 6 and 7 are each independently shippable and cuttable; Phase 8 (delivery) always runs and adapts to what was cut.
@@ -104,6 +104,7 @@ Phase 2 is the one exception to "one step, one commit": D13 wants a single initi
   - Verify: the YAML parses (`npx --yes yaml-lint` or an editor check); each command of the job passes locally in the same order.
   - Out of scope: the e2e job (P4.5); deployment (Vercel uses its own Git integration).
   - Commit: none — folded into the initial commit proposed in P2.8
+  - Notes: in Phase 8, on the owner's request, the one job was split into Lint, Typecheck, Unit tests, Audit, Build and E2E; its name lives on as the gate job, the ruleset's required check (`decisions.md` §5, D14).
   - Requirements: R11
 
 - [x] **P2.7 — README stub and command list**
@@ -331,11 +332,12 @@ Covers only what the list page needs (`all_leagues`, `search_all_seasons`). The 
     - a console guard in `tests/e2e/helpers.ts` fails a test on any console error, warning or page error, and takes a per-test list of expected messages (for example the `Failed to load resource … 404/502` line that a test provokes on purpose); every spec uses it;
     - `webServer` starts the fixture server and `node .output/server/index.mjs` with the fixture base URL, both on fixed ports different from `dev:fixtures`, so a running dev session does not clash;
     - scripts `test:smoke` (smoke spec only) and `test:e2e` (all specs) both expect an existing build;
-    - a separate CI job `E2E` (build → install Chromium → `test:e2e`, report uploaded on failure) runs on every push but is not a required check until P8.6;
+    - a separate CI job `E2E` (build → install Chromium → `test:e2e`, report uploaded on failure) runs on every push but is not a required check (it stayed optional after P8.6, the owner's choice);
     - the `CLAUDE.md` commands block is updated.
   - Verify: once per machine `npx playwright install chromium`; `npm run build && npm run test:smoke` passes; temporarily rendering `Date.now()` in the page makes it fail, then revert.
   - Out of scope: feature flows (P7).
   - Commit: `test(e2e): add playwright smoke test and ci job`
+  - Notes: since Phase 8 the `E2E` job no longer builds: it needs the Build job and runs on its `.output` artifact (D14).
   - Requirements: R11, R6
 
 - [x] **P4.6 — List state store: search and sport in the URL**
@@ -620,7 +622,7 @@ If this phase is cut: mark its steps and P7.3 `[-]`, and in P8 adjust `README.md
 
 ## Phase 7 — E2E suite and the README screenshot (cuttable)
 
-If this phase is cut: mark its steps `[-]`, and in P8 adjust `decisions.md` §4, §5 (the E2E job becoming required), D1 and D2, the R4 note in `requirements.md` (e2e and the README screenshot) and the README top section. All specs run against the production build with the fixture server. No test may depend on test order or on the server cache left by another test.
+If this phase is cut: mark its steps `[-]`, and in P8 adjust `decisions.md` §4, §5 (the E2E job), D1 and D2, the R4 note in `requirements.md` (e2e and the README screenshot) and the README top section. All specs run against the production build with the fixture server. No test may depend on test order or on the server cache left by another test.
 
 - [x] **P7.1 — E2E: search and sport filter**
   - Goal: Prove R3 and R4 in a real browser on mixed-sport data.
@@ -692,7 +694,7 @@ If this phase is cut: mark its steps `[-]`, and in P8 adjust `decisions.md` §4,
   - Notes: the spec is tagged `@screenshot` and excluded from every run unless `README_SCREENSHOT` is set, which `npm run screenshot` does; Playwright's `animations: 'disabled'` keeps the open menu from being captured mid-fade.
   - Requirements: R4, R12
 
-**Checkpoint (Phase 7):** one commit for P7.1–P7.4 on `dev`. `npm run test:e2e` is green twice in a row (stability). The README shows the screenshot in a Markdown preview. Making `E2E` a required check happens in P8.6.
+**Checkpoint (Phase 7):** one commit for P7.1–P7.4 on `dev`. `npm run test:e2e` is green twice in a row (stability). The README shows the screenshot in a Markdown preview. Whether `E2E` becomes a required check is decided in P8.6 (it stayed optional).
 
 ---
 
@@ -700,7 +702,7 @@ If this phase is cut: mark its steps `[-]`, and in P8 adjust `decisions.md` §4,
 
 Always runs; it describes what was actually built. P8.1–P8.3 are local commits; P8.4–P8.7 publish them: the first push, CI, hosting, the ruleset and the release, all with the owner's hands or on the owner's command.
 
-- [ ] **P8.1 — README**
+- [x] **P8.1 — README**
   - Goal: A reviewer can understand, run and verify the project from the README alone.
   - Depends on: P4.12 (plus whichever of P5–P7 were done)
   - Files: `README.md`
@@ -709,9 +711,10 @@ Always runs; it describes what was actually built. P8.1–P8.3 are local commits
   - Verify: follow the README in a fresh clone in a temporary directory: `npm ci`, `npm run build`, `npm run test:run`, `npm run dev`.
   - Out of scope: the long-form docs.
   - Commit: `docs(readme): complete run and verification guide`
+  - Notes: on the owner's request the README also lists the tech stack, the CI/CD pipeline, the scope and time (R13), the AI tools (R12) and a short "How it was built"; the full story is in `docs/process.md`.
   - Requirements: R10, R11, R12
 
-- [ ] **P8.2 — Cache warm-up script**
+- [x] **P8.2 — Cache warm-up script**
   - Goal: A command that warms every league after a deploy without tripping the upstream rate limit.
   - Depends on: P3.6
   - Files: `scripts/warm-cache.mjs`, `package.json`, `README.md`, `CLAUDE.md` (commands block gains `warm`)
@@ -722,7 +725,7 @@ Always runs; it describes what was actually built. P8.1–P8.3 are local commits
   - Commit: `chore(deploy): add cache warm-up script`
   - Requirements: R8, R11
 
-- [ ] **P8.3 — Final review and docs sync**
+- [x] **P8.3 — Final review and docs sync**
   - Goal: One full-scope pass before sharing the link.
   - Depends on: P8.1, P8.2
   - Files: whatever the review finds; `CLAUDE.md`, `docs/*.md` for drift
@@ -731,6 +734,7 @@ Always runs; it describes what was actually built. P8.1–P8.3 are local commits
   - Verify: lint, typecheck, `test:coverage`, build, `test:e2e` all green locally (CI runs from P8.4).
   - Out of scope: new features; refactors not tied to a finding.
   - Commit: `chore: final review fixes and docs sync`
+  - Notes: the independent reviewer found one bug: after a failed server render the badge panel retried on mount, although "Try again" is the only retry (fixed, with a regression test). Also from the review: a test for the error state and "Try again" on the list and league pages; `RetryAlert` and `SeasonBadgesEmpty` replace three and two copies (`LeagueListError` is gone); the error page's copy is a lookup; e2e uses `waitForHydration` from `@nuxt/test-utils/e2e`; dead exports dropped; drift fixed (`E2E` not required, footer column order, the review skill, native radios). On the owner's request CI was split into one job per concern (Lint, Typecheck, Unit tests, Audit, Build, E2E on the build artifact) behind a gate job that keeps the required check's name (`decisions.md` §5).
   - Requirements: R5, R11, R12, E1
 
 - [x] **P8.4 — First push and CI (owner)**
@@ -745,7 +749,7 @@ Always runs; it describes what was actually built. P8.1–P8.3 are local commits
   - Notes: done early, right after Phase 5, by a deploy agent on the owner's request: https://github.com/exibet/sports-league, both CI jobs green on the first run.
   - Requirements: R10, R11
 
-- [~] **P8.5 — Connect Vercel and add the live link (owner)**
+- [x] **P8.5 — Connect Vercel and add the live link (owner)**
   - Goal: Production deploys from `main`, and the README links to it.
   - Depends on: P8.4
   - Files: `README.md` (the live link)
@@ -754,7 +758,7 @@ Always runs; it describes what was actually built. P8.1–P8.3 are local commits
   - Verify: open the production URL; a repeat `curl -sI <production-url>/api/leagues` shows `x-vercel-cache: HIT` (Vercel strips `s-maxage` from the response it serves).
   - Out of scope: the warm-up and the final checks (P8.7).
   - Commit: `docs(readme): add live link`
-  - Notes: done early (after Phase 5) except the README link: Vercel project `sports-league`, Git integration, production from `main` at https://sports-league-sooty.vercel.app (the plain name was taken). The ruleset came first, so the README link goes through a `dev` → `main` PR. Vercel's CDN consumes `s-maxage`/`stale-while-revalidate` and strips them from the response, so the check is a repeat request with `x-vercel-cache: HIT`, not the header. The first build used Node 26.x because `engines.node` ended with `>=26`; the range now stops at 24, so the next production build (the first `dev` → `main` merge) uses the project's 24.x.
+  - Notes: done early (after Phase 5) except the README link: Vercel project `sports-league`, Git integration, production from `main` at https://sports-league-sooty.vercel.app (the plain name was taken). The ruleset came first, so the README link went in with P8.1 through the Phase 8 `dev` → `main` PR. Vercel's CDN consumes `s-maxage`/`stale-while-revalidate` and strips them from the response, so the check is a repeat request with `x-vercel-cache: HIT`, not the header. The first build used Node 26.x because `engines.node` ended with `>=26`; the range now stops at 24, so the next production build (the first `dev` → `main` merge) uses the project's 24.x.
   - Requirements: R8, R11
 
 - [x] **P8.6 — Enable the `main` ruleset (owner, GitHub settings)**
@@ -766,7 +770,7 @@ Always runs; it describes what was actually built. P8.1–P8.3 are local commits
   - Verify: a direct `git push` to `main` of an empty test commit is rejected (then dropped locally).
   - Out of scope: any code change.
   - Commit: none
-  - Notes: done early with P8.4 (ruleset `main`, active): `E2E` runs but is not required yet; GitHub also added its default extra-approval setting for unattributed changes, which does nothing with 0 required approvals.
+  - Notes: done early with P8.4 (ruleset `main`, active): `E2E` runs on every pull request but is not required (the owner's choice); GitHub also added its default extra-approval setting for unattributed changes, which does nothing with 0 required approvals.
   - Requirements: R10
 
 - [ ] **P8.7 — Release (owner)**
@@ -780,7 +784,7 @@ Always runs; it describes what was actually built. P8.1–P8.3 are local commits
   - Commit: none (performed after the last push, so this step stays `[ ]` in the repository)
   - Requirements: R10, R11
 
-**Checkpoint (Phase 8):** P8.1–P8.3 committed locally and checked; after P8.4–P8.6 both CI jobs are green on GitHub, production serves the app and `main` is protected; the owner performs P8.7.
+**Checkpoint (Phase 8):** P8.1–P8.3 committed locally and checked; after P8.4–P8.6 every CI job is green on GitHub, production serves the app and `main` is protected; the owner performs P8.7.
 
 ---
 

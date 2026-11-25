@@ -22,6 +22,8 @@
     "test:smoke": "playwright test tests/e2e/smoke.spec.ts",
     "test:e2e": "playwright test",
     "screenshot": "README_SCREENSHOT=1 playwright test --grep @screenshot",
+    "---------DEPLOY---------": "",
+    "warm": "node scripts/warm-cache.mjs",
     "---------SETUP---------": "",
     "postinstall": "nuxt prepare",
     "prepare": "husky"

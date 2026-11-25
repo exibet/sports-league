@@ -89,7 +89,8 @@ describe('SeasonBadgePanel', () => {
 
     expect(wrapper.text()).toContain('Couldn’t load the badge.')
     expect(wrapper.text()).toContain('TheSportsDB is limiting requests.')
-    load.mockClear()
+    // An error, also one rendered on the server, waits for the user: mounting retries nothing.
+    expect(load).not.toHaveBeenCalled()
     await wrapper.get('button:not([aria-label])').trigger('click')
     expect(load).toHaveBeenCalledWith(EPL.id)
   })
