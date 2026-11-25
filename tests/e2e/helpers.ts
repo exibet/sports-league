@@ -1,4 +1,5 @@
 import { test as base, expect, type Page } from '@playwright/test'
+import { waitForHydration } from '@nuxt/test-utils/e2e'
 
 interface GuardOptions {
   /** Console messages a test provokes on purpose, e.g. `Failed to load resource … 502`. */
@@ -31,7 +32,7 @@ export const test = base.extend<GuardOptions & { consoleGuard: undefined }>({
 /** `page.goto`, then wait until Nuxt has hydrated, so the first click or keystroke is not lost. */
 export async function visit(page: Page, url: string) {
   const response = await page.goto(url)
-  await page.waitForFunction(() => window.useNuxtApp?.().isHydrating === false)
+  await waitForHydration(page, url, 'hydration')
   return response
 }
 

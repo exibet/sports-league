@@ -103,8 +103,9 @@ server in tests and `dev:fixtures`).
      failure). The data lives in the store, so `useAsyncData` (whose result we would not use) is
      not needed.
    - The badge panel owns its data: `onServerPrefetch` loads it during SSR (a `?open=` URL renders
-     complete) and `onMounted` on the client (an open, or a hand-made URL). Both go through the
-     badge store, so a cached or in-flight entry makes no new request.
+     complete) and `onMounted` on the client (an open, or a hand-made URL), the latter only when
+     the store knows nothing about the league yet: a cached or in-flight entry needs no request, and
+     an error, also one rendered on the server, waits for "Try again".
    - The badge cache lives in Pinia as a plain `Record<id, entry>`; in-flight promises sit in a
      `Map` inside the store's setup closure (not module scope, which would leak across SSR
      requests; not returned state, which must serialise). A repeat open makes no request, two
@@ -147,7 +148,7 @@ server in tests and `dev:fixtures`).
   filters come back with it), otherwise navigates to `/`.
 - Domain components (starting point for the plan): `AppHeader`, `AppFooter`, `LeagueFilters`,
   `LeagueList`, `LeagueRow` (accordion row), `SeasonBadgePanel`, `SeasonPicker`, `LeagueHero`,
-  `SeasonBadgeGrid`, plus loading, empty and error states.
+  `SeasonBadgeGrid`, plus loading and empty states and a shared `RetryAlert` for errors.
 - Nuxt UI inside: `UHeader`, `UContainer`, `UInput`, `USelect`, `UButton`, `UBadge`,
   `USkeleton`, `UAlert`, `UEmpty`, `UColorModeButton`; VueUse for debounce, time-ago and scrolling.
 - `LeagueRow` is a hand-written accordion row, not `UAccordion`: `UAccordion` renders its header
@@ -165,8 +166,8 @@ server in tests and `dev:fixtures`).
   names the query.
 - **Accordion:** one league open at a time; first open shows a skeleton, repeat open is instant.
 - **`SeasonPicker`** — both modes from the start:
-  - ≤ 5 seasons → segmented control built as a radio group (native radios or `URadioGroup`, arrow
-    keys work); short labels `1992/93`; below a 340 px container the labels drop to 12 px.
+  - ≤ 5 seasons → segmented control built as a radio group (native radios, arrow keys work);
+    short labels `1992/93`; below a 340 px container the labels drop to 12 px.
   - \> 5 seasons (paid key) → `[‹] [season select] [›]` stepper.
   - Covered by a component test for both modes.
 - **No badges:** "No season badges yet" with the reason; the league link stays.
@@ -191,7 +192,7 @@ server in tests and `dev:fixtures`).
   sanitising, `open` clearing `season`, filter dropping `open`), badge cache (no repeat request, shared promise, eviction on failure), `SeasonPicker` modes.
 - **Coverage:** `include` = `server/**`, `shared/**`, `app/utils/**`; thresholds (lines 70,
   functions 70, branches 65) switch on in the plan step that lands the first server tests. Checked
-  in CI, not in pre-commit.
+  in CI (the Unit tests job), not in pre-commit.
 - **Smoke (Playwright), right after the first UI step:** the list renders from a production build
   with zero console errors and zero hydration warnings. From then on every plan step runs
   `npm run build` and the smoke test.
@@ -199,17 +200,23 @@ server in tests and `dev:fixtures`).
   with the fixture server as upstream; fixture images are served locally. Flows: search, sport
   filter, open/close and season switch, cached reopen (asserted by counting browser requests),
   league page and back, error and retry (via `page.route` on `/api/**`). 1015 mapping stays in unit
-  tests. A separate `npm run screenshot` (not part of CI) captures the sport-dropdown screenshot
-  for the README.
+  tests. In CI the E2E job runs on the Build job's `.output` artifact, so what is tested is exactly
+  what was built. A separate `npm run screenshot` (not part of CI) captures the sport-dropdown
+  screenshot for the README.
 - **`npm run dev:fixtures`:** app + fixture server in one command, so a reviewer can try the sport
   filter locally (D1).
 
 ## 5. Repository, tooling, delivery
 
-- **CI** (`.github/workflows/ci.yml`): `npm ci` → lint → typecheck → unit tests (both projects) →
-  coverage (the `node` project again, with thresholds) → build → `npm audit` (non-blocking). A
-  separate `E2E` job (build → Playwright) arrives with the smoke test (plan step P4.5) as a
-  non-required check and becomes required with the `main` ruleset at delivery (plan step P8.6).
+- **CI** (`.github/workflows/ci.yml`): one job per concern. Lint, Typecheck and Unit tests (the
+  `node` project with coverage thresholds, then the `nuxt` project) run in parallel; Build needs
+  all three and uploads `.output` as an artifact; E2E needs Build and runs Playwright on that
+  artifact instead of building again; Audit (`npm audit`) only reports. A gate job named "Lint,
+  Typecheck, Test, Build" needs Lint, Typecheck, Unit tests and Build and is the one required
+  check of the `main` ruleset, so jobs can change without touching the ruleset; it runs with
+  `always()`, because a skipped required check would count as passed. E2E runs on every pull
+  request but is not part of the gate (the owner's choice). Until Phase 8 there were two jobs: all
+  checks in one, plus E2E with its own build.
 - **Hooks:** `pre-commit` → lint-staged (`eslint --fix`) + typecheck; `commit-msg` → commitlint
   (Conventional Commits). Coverage runs in CI.
 - **ESLint:** the `@nuxt/eslint` module's `withNuxt` flat config (`createConfigForNuxt`
@@ -219,28 +226,32 @@ server in tests and `dev:fixtures`).
 - **Git flow:** Phases 2–5 were committed locally on `main`, one commit per phase. Once the core
   brief was done, `main` was published (public repository, CI, Vercel production from `main`) and
   protected by a ruleset: no deletion or force-push, linear history, PR required (0 approvals,
-  rebase or squash merge), required check "Lint, Typecheck, Test, Build" (`E2E` runs, not yet
-  required). From Phase 6 on, work happens on `dev`, one commit per phase after the owner's
+  rebase or squash merge), required check "Lint, Typecheck, Test, Build" (since Phase 8 the CI gate
+  job; `E2E` runs, not required). From Phase 6 on, work happens on `dev`, one commit per phase after the owner's
   review, and reaches `main` through a `dev` → `main` PR that the owner rebase-merges; then `dev`
   is reset to `origin/main` (force-with-lease on `dev` only), so the two stay identical. `main`'s
   history is never rewritten.
-- **Vercel:** Git integration, Nuxt auto-detects the preset, no `vercel.json`. After each deploy,
-  warm the cache for every league before sharing the link.
+- **Vercel:** Git integration, Nuxt auto-detects the preset, no `vercel.json`; a preview for every
+  pull request, production from `main`. After each production deploy, warm the cache for every
+  league (`npm run warm -- <url>`) before sharing the link.
 - **Not used:** dependabot (it would open PRs while the repo is being reviewed), extra Playwright
   browsers.
 - **Language:** English everywhere in the repository.
 - **Commits:** Conventional Commits, scope by area (`feat(leagues): …`), no `Co-Authored-By`
   trailer. Git steps happen only when the owner asks.
 - **README:** what it is, live link, sport-filter screenshot and `npm run dev:fixtures` at the top,
-  how to run, scripts, a link to `docs/`.
+  features, tech stack, how to run, scripts, how it works, CI/CD, a short "how it was built" and a
+  link to `docs/`. The full story of the process is in `docs/process.md`.
 
 ## 6. AI tooling in the repository
 
 Published on purpose (the brief invites AI use and asks to describe it):
 
 - `CLAUDE.md` — commands, architecture, code rules, git rules, pointers to `docs/`.
-- `.claude/skills/review/` — reviews the current changes: lint, types, tests, build, then a
-  project checklist (state and URL sync, caching, server adapter, SSR, security, a11y, tests).
+- `.claude/skills/review/` — reviews the current changes: lint, types, tests, coverage, build and
+  e2e, then a project checklist (readability and code style, library-first, state and URL sync,
+  caching, server adapter, SSR, security, a11y, tests) and an independent reviewer agent whose
+  findings are verified before anything changes.
 - `.claude/skills/phase/` — runs one step of `docs/plan.md` at a time and stops before committing.
 
 ## 7. Decision log
@@ -260,6 +271,7 @@ Published on purpose (the brief invites AI use and asks to describe it):
 | D11 | Season picker | Both modes (segmented ≤ 5, stepper > 5) in the component from the start |
 | D12 | Footer freshness line | Client-only, only when `fetchedAt` is known |
 | D13 | Git flow | Phases 2–5 local on `main`; then `main` published and protected; from Phase 6 one commit per phase on `dev`, `dev` → `main` PR merged by the owner |
+| D14 | CI structure | One job per concern: Lint, Typecheck, Unit tests in parallel → Build (artifact) → E2E on that build; Audit reports only; a gate job keeps the required check's name, so the ruleset never changes with the jobs; E2E stays outside the gate |
 
 ## 8. Out of scope (next steps)
 

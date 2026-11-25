@@ -28,27 +28,21 @@ const position = computed(() => Math.max(0, seasons.value.findIndex(season => se
 const selected = computed(() => loaded.value[position.value])
 
 // The panel owns its data: SSR waits for it (`?open=` URLs render complete) and the client reuses
-// it from the payload; an open on the client loads it here. Cached or in flight: no new request.
+// it from the payload; an open on the client loads it here. Only when nothing is known yet: a
+// failure (also one from SSR) waits for "Try again", and a cached or running load needs nothing.
 onServerPrefetch(() => badges.load(props.league.id))
-onMounted(() => badges.load(props.league.id))
+onMounted(() => {
+  if (!entry.value) badges.load(props.league.id)
+})
 </script>
 
 <template>
   <div class="@container">
-    <UAlert
+    <RetryAlert
       v-if="entry?.status === 'error'"
-      color="error"
-      variant="subtle"
-      icon="i-lucide-triangle-alert"
       title="Couldn’t load the badge."
       :description="entry.message"
-      :actions="[{
-        label: 'Try again',
-        color: 'neutral',
-        variant: 'outline',
-        class: 'min-h-11',
-        onClick: () => badges.load(league.id),
-      }]"
+      @retry="badges.load(league.id)"
     />
 
     <div
@@ -90,15 +84,7 @@ onMounted(() => badges.load(props.league.id))
       />
     </div>
 
-    <UEmpty
-      v-else-if="entry?.status === 'success'"
-      variant="naked"
-      size="sm"
-      class="border border-dashed border-default"
-      icon="i-lucide-image-off"
-      title="No season badges yet"
-      description="TheSportsDB has no badge for any season of this league."
-    />
+    <SeasonBadgesEmpty v-else-if="entry?.status === 'success'" />
 
     <div
       v-else

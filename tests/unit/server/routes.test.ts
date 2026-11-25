@@ -121,7 +121,7 @@ describe('API routes', () => {
     })
   })
 
-  it('declares both cached functions with a name, swr and the documented maxAge', () => {
+  it('declares all three cached functions with a name, swr and the documented maxAge', () => {
     expect(stubs.declarations).toEqual([
       { name: 'leagues', maxAge: 1800, swr: true, hasGetKey: true },
       { name: 'seasons', maxAge: 604800, swr: true, hasGetKey: true },

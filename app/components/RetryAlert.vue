@@ -1,5 +1,7 @@
 <script setup lang="ts">
-const leagues = useLeaguesStore()
+/** A failed load: what failed, why, and "Try again" (the only retry; requests never repeat on their own). */
+defineProps<{ title: string, description?: string }>()
+const emit = defineEmits<{ retry: [] }>()
 </script>
 
 <template>
@@ -7,15 +9,15 @@ const leagues = useLeaguesStore()
     color="error"
     variant="subtle"
     icon="i-lucide-triangle-alert"
-    title="Couldn’t load leagues"
-    :description="leagues.error ?? undefined"
+    :title="title"
+    :description="description"
     :actions="[{
       label: 'Try again',
       icon: 'i-lucide-refresh-cw',
       color: 'neutral',
       variant: 'outline',
       class: 'min-h-11',
-      onClick: () => leagues.load(),
+      onClick: () => emit('retry'),
     }]"
   />
 </template>

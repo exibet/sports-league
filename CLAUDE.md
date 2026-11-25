@@ -8,7 +8,7 @@ graded.
 ## Read first
 
 - `docs/requirements.md` — the assignment verbatim, requirement IDs (R1–R13, E1), interpretation
-- `docs/decisions.md` — stack, architecture, caching, state, testing, tooling, decision log (D1–D13)
+- `docs/decisions.md` — stack, architecture, caching, state, testing, tooling, decision log (D1–D14)
 - `docs/api.md` — what TheSportsDB really returns (edge cases, rate limit) and our own contract
 - `docs/design.md` + `docs/design/` — visual spec, tokens, states, screenshots of the prototype
 - `docs/plan.md` — the phased plan; the `phase` skill works through it step by step
@@ -26,6 +26,7 @@ npm run typecheck      # nuxt typecheck (app, server, tests, configs)
 npm run test           # vitest watch ;  test:run — once ;  test:coverage — node project + coverage
 npm run test:smoke     # playwright smoke spec ;  test:e2e — all specs (both need `npm run build` first)
 npm run screenshot     # regenerate docs/readme/sport-filter.png (needs a build; not part of CI)
+npm run warm -- <url>  # after a deploy: request every league once, 9 s apart (rate limit)
 ```
 
 Playwright runs the existing production build against the fixture server on ports 3920/3921.
@@ -66,8 +67,8 @@ Once per machine: `npx playwright install chromium`.
   actions (pages through `callOnce`); stores call our `/api`.
 - **Stores:** never `useRoute()` inside a store; never `router.replace` during store setup or SSR;
   invalid query params are sanitised by derivation (getters fall back), never by rewriting the URL
-  on load. In-flight promises live in a `Map` inside the setup closure, never in module scope or in
-  returned state.
+  on load. In-flight promises live inside the setup closure (a `Map` when there are several), never
+  in module scope or in returned state.
 - **No duplicated state:** what lives in the URL is not copied into store state. The one allowed
   copy is the debounced search draft in `LeagueFilters` (instant typing, 250 ms debounced URL
   write, re-synced only when `q` changes from outside).
@@ -98,13 +99,18 @@ hydration warnings). Never weaken a rule, threshold or test to make a check pass
 - Commit, push, open a PR or merge **only when the owner asks in chat**. Make the change, verify it,
   report, ask.
 - Conventional Commits (`feat(leagues): …`), lowercase type, summary ≤ 72 chars, body lines ≤ 100.
-- **Never add a `Co-Authored-By` trailer.** Never use `--no-verify`.
+- **Never add a `Co-Authored-By` trailer**, and no "Generated with Claude Code" line (or other AI
+  attribution) in PR descriptions. Never use `--no-verify`.
 - Work happens on `dev`, one commit per plan phase after the owner reviews it. `main` is what
-  Vercel deploys and is protected by a ruleset (PR required, linear history, required check
-  "Lint, Typecheck, Test, Build"): code reaches it through a `dev` → `main` PR that the owner
-  merges (rebase). Push `dev` and open that PR only when the owner asks. After the merge, `dev` is
-  reset to `origin/main` and pushed with `--force-with-lease` (the rebase merge rewrote the commit),
-  so both branches stay identical and the history linear.
+  Vercel deploys and is protected by a ruleset (PR required, linear history, required check: the
+  CI gate job "Lint, Typecheck, Test, Build"): code reaches it through a `dev` → `main` PR that the
+  owner merges (rebase). Push `dev` and open that PR only when the owner asks. After the merge,
+  `dev` is reset to `origin/main` and pushed with `--force-with-lease` (the rebase merge rewrote
+  the commit), so both branches stay identical and the history linear.
+- CI (`.github/workflows/ci.yml`): Lint, Typecheck and Unit tests in parallel → Build (uploads
+  `.output` as an artifact) → E2E on that build; Audit only reports. The gate job "Lint, Typecheck,
+  Test, Build" needs Lint, Typecheck, Unit tests and Build and is the ruleset's required check:
+  keep its name, and add any new blocking job to its `needs`. E2E is not in the gate.
 
 ## Skills
 

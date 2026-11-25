@@ -3,22 +3,31 @@ import type { NuxtError } from '#app'
 
 // Replaces `app.vue` when a page fails, so it brings its own `UApp` and layout.
 const props = defineProps<{ error: NuxtError }>()
-const notFound = computed(() => props.error.statusCode === 404)
 
-useSeoMeta({ title: () => `${notFound.value ? 'League not found' : 'Something went wrong'} · Sports Leagues` })
+const COPY = {
+  notFound: {
+    icon: 'i-lucide-search-x',
+    title: 'League not found',
+    description: 'There is no league at this address: the link may be mistyped or out of date.',
+  },
+  failed: {
+    icon: 'i-lucide-triangle-alert',
+    title: 'Something went wrong',
+    description: 'The page could not be shown. Try again in a moment.',
+  },
+}
+const copy = computed(() => props.error.statusCode === 404 ? COPY.notFound : COPY.failed)
+
+useSeoMeta({ title: () => `${copy.value.title} · Sports Leagues` })
 </script>
 
 <template>
   <UApp>
     <NuxtLayout>
       <UEmpty
+        v-bind="copy"
         variant="naked"
         class="border border-dashed border-default"
-        :icon="notFound ? 'i-lucide-search-x' : 'i-lucide-triangle-alert'"
-        :title="notFound ? 'League not found' : 'Something went wrong'"
-        :description="notFound
-          ? 'There is no league at this address: the link may be mistyped or out of date.'
-          : 'The page could not be shown. Try again in a moment.'"
         :actions="[{
           label: 'All leagues',
           icon: 'i-lucide-chevron-left',

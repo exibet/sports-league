@@ -51,21 +51,11 @@ useSeoMeta({
       @click="backToList"
     />
 
-    <UAlert
+    <RetryAlert
       v-if="entry?.status === 'error'"
-      color="error"
-      variant="subtle"
-      icon="i-lucide-triangle-alert"
       title="Couldn’t load the league"
       :description="entry.message"
-      :actions="[{
-        label: 'Try again',
-        icon: 'i-lucide-refresh-cw',
-        color: 'neutral',
-        variant: 'outline',
-        class: 'min-h-11',
-        onClick: () => details.load(id),
-      }]"
+      @retry="details.load(id)"
     />
 
     <template v-else-if="league">

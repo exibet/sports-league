@@ -21,9 +21,12 @@ useSeoMeta({
     <p class="mt-1 text-sm text-muted">
       Open a league to see its season badge, or go to its page for the details.
     </p>
-    <LeagueListError
+    <RetryAlert
       v-if="leagues.status === 'error'"
       class="mt-6"
+      title="Couldn’t load leagues"
+      :description="leagues.error ?? undefined"
+      @retry="leagues.load()"
     />
     <LeagueListSkeleton
       v-else-if="leagues.status !== 'success'"

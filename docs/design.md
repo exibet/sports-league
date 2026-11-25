@@ -66,9 +66,10 @@ component hardcodes a color; everything goes through the tokens below.
   chips: sport, country, "Founded 1992", "Season 2026/27"; website link) → "About" (max 72ch) →
   "Season badges" grid `repeat(auto-fill, minmax(104px, 1fr))` with season captions.
 - **Footer** (muted background): brand column (wordmark, one-liner, stack chips: Nuxt 4, Nuxt UI,
-  Pinia, Nitro cache, Vercel) · "Data" column (pulsing dot + "TheSportsDB free API", "Updated N
-  minutes ago" from `fetchedAt` — client-only, hidden when the list is not loaded, "Cached on the
-  server for 30 minutes") · "Project" column (Source code, API documentation) · bottom bar (© + "Not affiliated with TheSportsDB", "Back to top").
+  Pinia, Nitro cache, Vercel) · "Project" column (Source code, API documentation) · "Data" column
+  (pulsing dot + "TheSportsDB free API", "Updated N minutes ago" from `fetchedAt` — client-only,
+  hidden when the list is not loaded, "Cached on the server for 30 minutes") · bottom bar (© + "Not
+  affiliated with TheSportsDB", "Back to top").
 
 ## States
 
